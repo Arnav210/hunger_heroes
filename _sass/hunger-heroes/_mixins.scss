@@ -2,7 +2,7 @@
 // MIXINS — Reusable Patterns
 // ==============================================
 
-@import "variables";
+@import "design-tokens";
 
 // ----- Glass Morphism -----
 @mixin glass($bg: rgba(255, 255, 255, 0.7), $border: rgba(255, 255, 255, 0.3)) {
