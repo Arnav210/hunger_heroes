@@ -527,7 +527,7 @@ menu: nav/home.html
     // Try to POST to backend; if it fails, use a client-side ID
     let donationId = null;
     try {
-      const res = await fetch(`${pythonURI}/api/donation`, {
+      const res = await fetch(`${pythonURI}/api/donations`, {
         ...fetchOptions,
         method: 'POST',
         body: JSON.stringify(donationData)
@@ -546,6 +546,7 @@ menu: nav/home.html
     }
 
     donationData.id = donationId;
+    donationData.status = 'posted';
 
     // Save to localStorage as backup
     const donations = JSON.parse(localStorage.getItem('hh_donations') || '[]');

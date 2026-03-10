@@ -136,22 +136,36 @@ menu: nav/home.html
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
         <p id="stat-total" class="text-3xl font-bold gradient-text mb-1">0</p>
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Donations</p>
       </div>
       <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
-        <p id="stat-active" class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">0</p>
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active</p>
+        <p id="stat-posted" class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Posted</p>
       </div>
       <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
-        <p id="stat-accepted" class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">0</p>
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Accepted</p>
+        <p id="stat-in-transit" class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">In Transit</p>
       </div>
       <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
-        <p id="stat-scanned" class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">0</p>
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Scanned</p>
+        <p id="stat-delivered" class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Delivered</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
+        <p id="stat-claimed" class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Claimed</p>
+      </div>
+      <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
+        <p id="stat-confirmed" class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Confirmed</p>
+      </div>
+      <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft border border-slate-200/50 dark:border-slate-700/50 p-5 text-center">
+        <p id="stat-volunteers" class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">0</p>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Volunteers</p>
       </div>
     </div>
   </div>
@@ -161,31 +175,48 @@ menu: nav/home.html
   import { pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
   
   document.addEventListener('DOMContentLoaded', async () => {
-    // Try backend stats
+    // Try backend stats with a 3-second timeout
     try {
-      const res = await fetch(`${pythonURI}/api/donation/stats`, fetchOptions);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${pythonURI}/api/donations/stats`, {
+        ...fetchOptions,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const stats = await res.json();
         animateCounter('stat-total', stats.total || 0);
-        animateCounter('stat-active', stats.active || 0);
-        animateCounter('stat-accepted', stats.accepted || 0);
-        animateCounter('stat-scanned', stats.scanned || 0);
+        animateCounter('stat-posted', stats.posted || 0);
+        animateCounter('stat-claimed', stats.claimed || 0);
+        animateCounter('stat-in-transit', stats.in_transit || 0);
+        animateCounter('stat-delivered', stats.delivered || 0);
+        animateCounter('stat-confirmed', stats.confirmed || 0);
+        animateCounter('stat-volunteers', stats.volunteers_active || 0);
         return;
       }
-    } catch(e) {}
+    } catch(e) {
+      console.log('Backend unavailable, using localStorage stats');
+    }
 
     // Fallback: localStorage
     const donations = JSON.parse(localStorage.getItem('hh_donations') || '[]');
-    const accepted = donations.filter(d => d.status === 'accepted').length;
+    const counts = { posted: 0, claimed: 0, in_transit: 0, delivered: 0, confirmed: 0 };
+    donations.forEach(d => { if (counts[d.status] !== undefined) counts[d.status]++; });
     animateCounter('stat-total', donations.length);
-    animateCounter('stat-active', donations.length - accepted);
-    animateCounter('stat-accepted', accepted);
-    animateCounter('stat-scanned', accepted);
+    animateCounter('stat-posted', counts.posted);
+    animateCounter('stat-claimed', counts.claimed);
+    animateCounter('stat-in-transit', counts.in_transit);
+    animateCounter('stat-delivered', counts.delivered);
+    animateCounter('stat-confirmed', counts.confirmed);
+    animateCounter('stat-volunteers', 0);
   });
 
   function animateCounter(id, target) {
     const el = document.getElementById(id);
+    if (!el) return;
     let current = 0;
+    if (target === 0) { el.textContent = '0'; return; }
     const step = Math.max(1, Math.ceil(target / 30));
     const timer = setInterval(() => {
       current += step;

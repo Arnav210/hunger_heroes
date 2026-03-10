@@ -1,0 +1,343 @@
+// ==============================================
+// DONATE PAGES — Styles for Donation System
+// ==============================================
+
+@import "design-tokens";
+@import "mixins";
+
+// ---------------------------------------------------------
+// 1. FILTER BUTTONS (History Page)
+// ---------------------------------------------------------
+.filter-btn {
+  cursor: pointer;
+  white-space: nowrap;
+
+  &.active {
+    background: $token-primary-100;
+    color: $token-primary-700;
+  }
+
+  &:not(.active) {
+    background: $token-neutral-100;
+    color: $token-neutral-500;
+
+    &:hover {
+      background: $token-neutral-200;
+      color: $token-neutral-700;
+    }
+  }
+}
+
+.dark .filter-btn {
+  &.active {
+    background: rgba($token-primary-600, 0.2);
+    color: $token-primary-400;
+  }
+
+  &:not(.active) {
+    background: $token-neutral-700;
+    color: $token-neutral-400;
+
+    &:hover {
+      background: $token-neutral-600;
+      color: $token-neutral-300;
+    }
+  }
+}
+
+// Hide scrollbar on filter row
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ---------------------------------------------------------
+// 2. QR SCANNER (Scan Page — html5-qrcode overrides)
+// ---------------------------------------------------------
+#qr-reader {
+  video {
+    border-radius: $token-radius-xl;
+  }
+
+  &__dashboard {
+    padding: $token-space-2;
+
+    button {
+      background: linear-gradient(135deg, $token-primary-500, $token-secondary-500) !important;
+      color: $token-text-inverse !important;
+      border: none !important;
+      border-radius: $token-radius-lg !important;
+      padding: $token-space-2 $token-space-4 !important;
+      font-weight: $token-weight-semibold !important;
+      cursor: pointer !important;
+      transition: opacity $token-transition-fast !important;
+
+      &:hover {
+        opacity: 0.9 !important;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------
+// 3. SCAN LINE ANIMATION
+// ---------------------------------------------------------
+@keyframes scan-line {
+  0%   { top: 10%; }
+  50%  { top: 85%; }
+  100% { top: 10%; }
+}
+
+.animate-scan-line {
+  animation: scan-line 2.5s ease-in-out infinite;
+  position: absolute;
+}
+
+// ---------------------------------------------------------
+// 4. STATUS TIMELINE (Scan Page — 5-stage lifecycle)
+// ---------------------------------------------------------
+.status-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 $token-space-2;
+
+  &__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $token-space-1;
+    position: relative;
+    z-index: 1;
+
+    &-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: $token-radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $token-text-sm;
+      font-weight: $token-weight-bold;
+      background: $token-neutral-100;
+      color: $token-neutral-400;
+      border: 2px solid $token-neutral-200;
+      transition: all $token-transition-normal;
+    }
+
+    &-label {
+      font-size: $token-text-xs;
+      font-weight: $token-weight-semibold;
+      color: $token-neutral-400;
+      text-align: center;
+      transition: color $token-transition-normal;
+    }
+
+    // Active step
+    &.is-active &-icon {
+      background: linear-gradient(135deg, $token-primary-500, $token-secondary-500);
+      color: $token-text-inverse;
+      border-color: $token-primary-400;
+      box-shadow: 0 0 12px rgba($token-primary-500, 0.4);
+    }
+
+    &.is-active &-label {
+      color: $token-primary-600;
+    }
+
+    // Completed step
+    &.is-complete &-icon {
+      background: $token-primary-100;
+      color: $token-primary-600;
+      border-color: $token-primary-300;
+    }
+
+    &.is-complete &-label {
+      color: $token-primary-600;
+    }
+  }
+
+  // Connector line between steps
+  &__connector {
+    flex: 1;
+    height: 2px;
+    background: $token-neutral-200;
+    margin: 0 $token-space-1;
+    position: relative;
+    top: -0.75rem; // align with icon center
+    transition: background $token-transition-normal;
+
+    &.is-complete {
+      background: linear-gradient(90deg, $token-primary-400, $token-secondary-400);
+    }
+  }
+}
+
+.dark .status-timeline {
+  &__step {
+    &-icon {
+      background: $token-neutral-700;
+      color: $token-neutral-500;
+      border-color: $token-neutral-600;
+    }
+
+    &-label {
+      color: $token-neutral-500;
+    }
+
+    &.is-active .status-timeline__step-icon {
+      background: linear-gradient(135deg, $token-primary-500, $token-secondary-500);
+      color: $token-text-inverse;
+      border-color: $token-primary-500;
+    }
+
+    &.is-active .status-timeline__step-label {
+      color: $token-primary-400;
+    }
+
+    &.is-complete .status-timeline__step-icon {
+      background: rgba($token-primary-500, 0.2);
+      color: $token-primary-400;
+      border-color: rgba($token-primary-400, 0.5);
+    }
+
+    &.is-complete .status-timeline__step-label {
+      color: $token-primary-400;
+    }
+  }
+
+  &__connector {
+    background: $token-neutral-600;
+
+    &.is-complete {
+      background: linear-gradient(90deg, $token-primary-500, $token-secondary-500);
+    }
+  }
+}
+
+// ---------------------------------------------------------
+// 5. DONATION CARDS (History Page)
+// ---------------------------------------------------------
+.donation-card {
+  transition: transform $token-transition-normal, box-shadow $token-transition-normal;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// ---------------------------------------------------------
+// 6. WARNING BANNERS (Scan Page — expiry/archived alerts)
+// ---------------------------------------------------------
+.donation-warning {
+  border-radius: $token-radius-xl;
+  padding: $token-space-4 $token-space-5;
+  display: flex;
+  align-items: center;
+  gap: $token-space-3;
+  font-size: $token-text-sm;
+
+  &--expired {
+    background: rgba($token-error, 0.08);
+    border: 1px solid rgba($token-error, 0.25);
+    color: $token-error;
+  }
+
+  &--warning {
+    background: rgba($token-warning, 0.08);
+    border: 1px solid rgba($token-warning, 0.25);
+    color: darken($token-warning, 10%);
+  }
+
+  &--info {
+    background: rgba($token-info, 0.08);
+    border: 1px solid rgba($token-info, 0.25);
+    color: $token-info;
+  }
+}
+
+.dark .donation-warning {
+  &--expired {
+    background: rgba($token-error, 0.12);
+    border-color: rgba($token-error, 0.3);
+  }
+
+  &--warning {
+    background: rgba($token-warning, 0.12);
+    border-color: rgba($token-warning, 0.3);
+    color: lighten($token-warning, 15%);
+  }
+
+  &--info {
+    background: rgba($token-info, 0.12);
+    border-color: rgba($token-info, 0.3);
+  }
+}
+
+// ---------------------------------------------------------
+// 7. VOLUNTEER ASSIGNMENT CARD
+// ---------------------------------------------------------
+.volunteer-card {
+  border-radius: $token-radius-2xl;
+  padding: $token-space-5;
+  background: $token-neutral-50;
+  border: 1px solid $token-neutral-200;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $token-space-3;
+    margin-bottom: $token-space-3;
+  }
+
+  &__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $token-radius-full;
+    background: linear-gradient(135deg, $token-primary-500, $token-secondary-500);
+    color: $token-text-inverse;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: $token-weight-bold;
+    font-size: $token-text-sm;
+  }
+
+  &__name {
+    font-weight: $token-weight-bold;
+    color: $token-text-primary;
+    font-size: $token-text-sm;
+  }
+
+  &__contact {
+    font-size: $token-text-xs;
+    color: $token-text-secondary;
+  }
+}
+
+.dark .volunteer-card {
+  background: $token-neutral-800;
+  border-color: $token-neutral-700;
+
+  &__name {
+    color: $token-text-inverse;
+  }
+
+  &__contact {
+    color: $token-neutral-400;
+  }
+}
+
+// ---------------------------------------------------------
+// 8. PRINT LABEL (Barcode Page — print-window styles handled
+//    inline inside JS window.open since it creates a
+//    separate document context)
+// ---------------------------------------------------------
+// The barcode print window styles must remain inline in the
+// JavaScript because they are injected into a new window
+// document that does not load our SASS stylesheets.

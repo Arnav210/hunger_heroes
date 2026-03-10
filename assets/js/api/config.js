@@ -4,7 +4,7 @@ if (location.hostname === "localhost") {
 } else if (location.hostname === "127.0.0.1") {
         pythonURI = "http://127.0.0.1:8288";
 } else {
-        pythonURI = "https://autonomous.opencodingsociety.com/";
+        pythonURI = "https://hungerheros.opencodingsociety.com/";
 }
 export var javaURI;
 if (location.hostname === "localhost") {
@@ -12,7 +12,7 @@ if (location.hostname === "localhost") {
 } else if (location.hostname === "127.0.0.1") {
         javaURI = "http://127.0.0.1:8288"; //rey
 } else {
-        javaURI = "https://autonomous.opencodingsociety.com/";
+        javaURI = "https://hungerheros.opencodingsociety.com/";
 }
 
 export const fetchOptions = {

@@ -231,7 +231,7 @@ menu: nav/home.html
       const id = params.get('id');
       if (id) {
         try {
-          const res = await fetch(`${pythonURI}/api/donation/${encodeURIComponent(id)}`, fetchOptions);
+          const res = await fetch(`${pythonURI}/api/donations/${encodeURIComponent(id)}`, fetchOptions);
           if (res.ok) donation = await res.json();
         } catch (e) { console.log('Backend fetch failed'); }
         
@@ -361,7 +361,26 @@ menu: nav/home.html
 
   // ---------- PRINT ----------
   window.printLabel = function() {
-    const labelHtml = document.getElementById('barcode-label').outerHTML;
+    const label = document.getElementById('barcode-label');
+
+    // Canvas elements (QR code) lose their pixel data when serialized
+    // via outerHTML. Convert every <canvas> to an <img> in a clone so
+    // the print window receives a portable data-URL image instead.
+    const clone = label.cloneNode(true);
+    const origCanvases = label.querySelectorAll('canvas');
+    const cloneCanvases = clone.querySelectorAll('canvas');
+    origCanvases.forEach((c, i) => {
+      try {
+        const img = document.createElement('img');
+        img.src = c.toDataURL('image/png');
+        img.style.width = c.style.width || `${c.width}px`;
+        img.style.height = c.style.height || `${c.height}px`;
+        img.style.borderRadius = c.style.borderRadius || '12px';
+        cloneCanvases[i].parentNode.replaceChild(img, cloneCanvases[i]);
+      } catch (e) { /* cross-origin — keep original canvas tag */ }
+    });
+
+    const labelHtml = clone.outerHTML;
     const win = window.open('', '_blank', 'width=600,height=800');
     win.document.write(`
       <!DOCTYPE html><html><head><title>Hunger Heroes Label</title>
@@ -370,6 +389,7 @@ menu: nav/home.html
         @media print { body { margin: 0; } @page { size: auto; margin: 10mm; } }
         body { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; display:flex; justify-content:center; padding:20px; }
         svg { max-width: 100%; height: auto; }
+        img { max-width: 100%; height: auto; }
       </style>
       </head><body>${labelHtml}</body></html>
     `);

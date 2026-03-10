@@ -33,15 +33,24 @@ menu: nav/home.html
     </div>
 
     <!-- Filter Tabs -->
-    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
       <button onclick="filterDonations('all')" class="filter-btn active px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="all">
         All
       </button>
-      <button onclick="filterDonations('active')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="active">
-        🟢 Active
+      <button onclick="filterDonations('posted')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="posted">
+        � Posted
       </button>
-      <button onclick="filterDonations('accepted')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="accepted">
-        ✅ Accepted
+      <button onclick="filterDonations('claimed')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="claimed">
+        🤝 Claimed
+      </button>
+      <button onclick="filterDonations('in_transit')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="in_transit">
+        🚚 In Transit
+      </button>
+      <button onclick="filterDonations('delivered')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="delivered">
+        📦 Delivered
+      </button>
+      <button onclick="filterDonations('confirmed')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="confirmed">
+        ✅ Confirmed
       </button>
       <button onclick="filterDonations('expired')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all" data-filter="expired">
         ⏰ Expired
@@ -85,20 +94,55 @@ menu: nav/home.html
   let allDonations = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
-    // Try backend first
-    try {
-      const res = await fetch(`${pythonURI}/api/donation`, fetchOptions);
-      if (res.ok) {
-        allDonations = await res.json();
-        renderDonations(allDonations);
-        return;
-      }
-    } catch(e) {}
+    let backendDonations = [];
 
-    // Fallback: localStorage
-    allDonations = JSON.parse(localStorage.getItem('hh_donations') || '[]').reverse();
+    // Try backend with a 3-second timeout so the page isn't stuck
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${pythonURI}/api/donations?mine=true`, {
+        ...fetchOptions,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        // Backend may return an array or an object with a donations key
+        backendDonations = Array.isArray(data) ? data : (Array.isArray(data.donations) ? data.donations : []);
+      }
+    } catch(e) {
+      console.log('Backend unavailable, using localStorage only');
+    }
+
+    // Always load localStorage donations
+    const localDonations = JSON.parse(localStorage.getItem('hh_donations') || '[]');
+
+    // Merge: backend wins on duplicates (by id), then append local-only entries
+    const backendIds = new Set(backendDonations.map(d => d.id));
+    const localOnly = localDonations.filter(d => !backendIds.has(d.id));
+    allDonations = [...backendDonations, ...localOnly].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
     renderDonations(allDonations);
   });
+
+  function getStatusInfo(d) {
+    const expiry = new Date(d.expiry_date);
+    const daysLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
+    const isExpired = daysLeft < 0;
+    const status = isExpired && d.status === 'posted' ? 'expired' : (d.status || 'posted');
+
+    const map = {
+      'posted':    { badge: '📋 Posted',     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+      'claimed':   { badge: '🤝 Claimed',    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+      'in_transit': { badge: '🚚 In Transit', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+      'delivered': { badge: '📦 Delivered',   color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
+      'confirmed': { badge: '✅ Confirmed',   color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+      'expired':   { badge: '⏰ Expired',     color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }
+    };
+    return { ...map[status] || map['posted'], status, daysLeft, isExpired };
+  }
 
   function renderDonations(donations) {
     const container = document.getElementById('donations-list');
@@ -111,26 +155,20 @@ menu: nav/home.html
 
     container.innerHTML = donations.map(d => {
       const expiry = new Date(d.expiry_date);
-      const daysLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
-      const isExpired = daysLeft < 0;
-      const isAccepted = d.status === 'accepted';
-      
-      let statusBadge, statusColor;
-      if (isExpired) {
-        statusBadge = '⏰ Expired';
-        statusColor = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      } else if (isAccepted) {
-        statusBadge = '✅ Accepted';
-        statusColor = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      } else {
-        statusBadge = '🟢 Active';
-        statusColor = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      }
+      const { badge: statusBadge, color: statusColor, status, daysLeft, isExpired } = getStatusInfo(d);
 
-      const statusAttr = isExpired ? 'expired' : isAccepted ? 'accepted' : 'active';
+      // Volunteer info
+      const volunteerHTML = d.volunteer_name
+        ? `<span class="text-xs text-slate-400">🙋 ${d.volunteer_name}</span>`
+        : '';
+
+      // Archive button for confirmed/delivered
+      const archiveHTML = (status === 'confirmed' || status === 'delivered')
+        ? `<button onclick="archiveDonation('${d.id}')" class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline ml-2">Archive</button>`
+        : '';
 
       return `
-        <div class="donation-card bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft hover:shadow-medium border border-slate-200/50 dark:border-slate-700/50 p-5 transition-all duration-200" data-status="${statusAttr}">
+        <div class="donation-card bg-white dark:bg-slate-800/80 rounded-2xl shadow-soft hover:shadow-medium border border-slate-200/50 dark:border-slate-700/50 p-5 transition-all duration-200" data-status="${status}" id="card-${d.id}">
           <div class="flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-2xl flex-shrink-0">
               ${CATEGORY_MAP[d.category] || '📦'}
@@ -142,16 +180,18 @@ menu: nav/home.html
               </div>
               <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
                 ${d.quantity} ${d.unit} · Expires ${expiry.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})}
-                ${daysLeft >= 0 && daysLeft <= 7 ? `<span class="text-amber-500 font-semibold">(${daysLeft}d left)</span>` : ''}
+                ${!isExpired && daysLeft <= 7 ? `<span class="text-amber-500 font-semibold">(${daysLeft}d left)</span>` : ''}
                 ${isExpired ? '<span class="text-red-500 font-semibold">(expired)</span>' : ''}
               </p>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center flex-wrap gap-2">
                 <span class="font-mono text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">${d.id}</span>
+                ${volunteerHTML}
                 <a href="{{site.baseurl}}/donate/barcode?id=${encodeURIComponent(d.id)}" 
                   class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
                   onclick="sessionStorage.setItem('hh_current_donation', JSON.stringify(${JSON.stringify(d).replace(/"/g, '&quot;')}))">
                   View Label →
                 </a>
+                ${archiveHTML}
               </div>
             </div>
           </div>
@@ -159,6 +199,32 @@ menu: nav/home.html
       `;
     }).join('');
   }
+
+  window.archiveDonation = async function(id) {
+    if (!confirm('Archive this donation? It will be permanently removed.')) return;
+    const card = document.getElementById(`card-${id}`);
+    if (card) card.style.opacity = '0.5';
+
+    try {
+      const res = await fetch(`${pythonURI}/api/donations/${encodeURIComponent(id)}`, {
+        ...fetchOptions,
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        if (card) card.remove();
+        allDonations = allDonations.filter(d => d.id !== id);
+        if (!allDonations.length) document.getElementById('empty-state').classList.remove('hidden');
+        return;
+      }
+    } catch(e) {}
+
+    // Fallback: remove from localStorage
+    const local = JSON.parse(localStorage.getItem('hh_donations') || '[]');
+    localStorage.setItem('hh_donations', JSON.stringify(local.filter(d => d.id !== id)));
+    allDonations = allDonations.filter(d => d.id !== id);
+    if (card) card.remove();
+    if (!allDonations.length) document.getElementById('empty-state').classList.remove('hidden');
+  };
 
   window.filterDonations = function(filter) {
     // Update active tab
@@ -180,22 +246,3 @@ menu: nav/home.html
     });
   };
 </script>
-
-<style>
-  .filter-btn.active {
-    background: rgb(219 234 254);
-    color: rgb(29 78 216);
-  }
-  .dark .filter-btn.active {
-    background: rgba(29, 78, 216, 0.2);
-    color: rgb(96 165 250);
-  }
-  .filter-btn:not(.active) {
-    background: rgb(241 245 249);
-    color: rgb(100 116 139);
-  }
-  .dark .filter-btn:not(.active) {
-    background: rgb(51 65 85);
-    color: rgb(148 163 184);
-  }
-</style>
