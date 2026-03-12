@@ -121,7 +121,7 @@ menu: nav/home.html
         <!-- Label Footer -->
         <div class="bg-slate-50 px-6 py-3 text-center border-t border-slate-200">
           <p class="text-xs text-slate-400">
-            <span id="label-date">---</span> · hungerheroes.org · City of San Diego
+            <span id="label-date">---</span> · hungerheroes.org · San Diego
           </p>
         </div>
       </div>
