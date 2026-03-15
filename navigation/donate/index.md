@@ -27,6 +27,75 @@ menu: nav/home.html
     <!-- Feature Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
+      <!-- Smart Match Card -->
+      <a href="{{site.baseurl}}/donate/match"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-blue-500/5 dark:from-emerald-500/10 dark:to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Find Food Near You</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            Smart matching for receivers: enter your zip and preferences to find the best food donations for you.
+          </p>
+          <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            Match Me
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Leaderboard Card -->
+      <a href="{{site.baseurl}}/donate/leaderboard"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-orange-500/5 dark:from-yellow-400/10 dark:to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 17v-2a4 4 0 014-4h10a4 4 0 014 4v2"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Donor Leaderboard</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            See the top donors and stats for the Hunger Heroes community.
+          </p>
+          <span class="inline-flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            View Leaderboard
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Manage Donations Card -->
+      <a href="{{site.baseurl}}/donate/manage"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 dark:from-blue-500/10 dark:to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Manage Donations</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            Donors and volunteers: update status, mark delivered, or cancel donations.
+          </p>
+          <span class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            Manage
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
       <!-- Create Donation Card -->
       <a href="{{site.baseurl}}/donate/create"
         class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
@@ -89,6 +158,75 @@ menu: nav/home.html
           </p>
           <span class="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 text-sm font-semibold group-hover:gap-2 transition-all">
             View History
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Network Analytics Card -->
+      <a href="{{site.baseurl}}/donate/network"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-cyan-500/5 dark:from-indigo-500/10 dark:to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Donation Network</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            Explore donor-receiver connections, community clusters, and network recommendations.
+          </p>
+          <span class="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            Explore
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Categories Card -->
+      <a href="{{site.baseurl}}/donate/categories"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-rose-500/5 dark:from-amber-500/10 dark:to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Food Categories</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            Browse the hierarchical food category tree and trace category paths.
+          </p>
+          <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            Explore
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Browse & Sort Card -->
+      <a href="{{site.baseurl}}/donate/browse"
+        class="group relative bg-white dark:bg-slate-800/80 rounded-3xl shadow-soft hover:shadow-large border border-slate-200/50 dark:border-slate-700/50 p-8 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-lime-500/5 dark:from-teal-500/10 dark:to-lime-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-lime-500 flex items-center justify-center shadow-lg mb-5 group-hover:scale-110 transition-transform">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Browse & Sort</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">
+            Browse all donations with sorting by expiry, date, or quantity, and filter by status.
+          </p>
+          <span class="inline-flex items-center gap-1 text-teal-600 dark:text-teal-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            Browse
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
@@ -172,10 +310,35 @@ menu: nav/home.html
 </div>
 
 <script type="module">
-  import { pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+  import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
   
   document.addEventListener('DOMContentLoaded', async () => {
-    // Try backend stats with a 3-second timeout
+    // 1. Try Spring stats endpoint first (uses required route)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(`${javaURI}/api/donations/stats`, {
+        ...fetchOptions,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const stats = await res.json();
+        const bs = stats.byStatus || {};
+        animateCounter('stat-total', stats.total || 0);
+        animateCounter('stat-posted', bs.active || 0);
+        animateCounter('stat-claimed', bs.accepted || 0);
+        animateCounter('stat-in-transit', bs['in-transit'] || 0);
+        animateCounter('stat-delivered', bs.delivered || 0);
+        animateCounter('stat-confirmed', bs.confirmed || bs.delivered || 0);
+        animateCounter('stat-volunteers', stats.expiringSoon || 0);
+        return;
+      }
+    } catch(e) {
+      console.log('Spring stats unavailable, trying Flask…');
+    }
+
+    // 2. Fallback: try Flask stats
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -196,10 +359,10 @@ menu: nav/home.html
         return;
       }
     } catch(e) {
-      console.log('Backend unavailable, using localStorage stats');
+      console.log('Flask stats also unavailable, using localStorage');
     }
 
-    // Fallback: localStorage
+    // 3. Last resort: localStorage
     const donations = JSON.parse(localStorage.getItem('hh_donations') || '[]');
     const counts = { posted: 0, claimed: 0, in_transit: 0, delivered: 0, confirmed: 0 };
     donations.forEach(d => { if (counts[d.status] !== undefined) counts[d.status]++; });

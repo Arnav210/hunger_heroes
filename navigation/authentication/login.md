@@ -65,76 +65,143 @@ search_exclude: true
 </main>
 
 <script type="module">
-  import { login, pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+  import { login, pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
+  // ── Login to BOTH Flask and Spring simultaneously ──
   window.pythonLogin = function() {
-    const options = {
-      URL: `${pythonURI}/api/authenticate`,
-      callback: pythonDatabase,
-      message: "message",
+    const uid = document.getElementById("uid").value;
+    const password = document.getElementById("password").value;
+
+    document.getElementById("message").textContent = "Logging in…";
+
+    // Wrap both logins in Promises, redirect after both finish
+    const flaskPromise = new Promise((resolve) => {
+      const options = {
+        URL: `${pythonURI}/api/authenticate`,
+        callback: () => { console.log('✅ Flask login success'); resolve('flask-ok'); },
+        message: "message",
+        method: "POST",
+        cache: "no-cache",
+        body: { uid, password }
+      };
+      login(options);
+      // login() may not call callback on failure, so set a timeout fallback
+      setTimeout(() => resolve('flask-timeout'), 5000);
+    });
+
+    const springPromise = fetch(`${javaURI}/authenticate`, {
+      ...fetchOptions,
       method: "POST",
-      cache: "no-cache",
-      body: {
-        uid: document.getElementById("uid").value,
-        password: document.getElementById("password").value,
+      body: JSON.stringify({ uid, password })
+    })
+    .then(response => {
+      if (!response.ok) {
+        // If Spring login fails, try auto-creating the account, then retry login
+        console.log('Spring login failed, attempting auto-signup…');
+        return fetch(`${javaURI}/api/person/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uid: uid,
+            sid: "0000000",
+            email: uid + "@gmail.com",
+            dob: "01-01-2000",
+            name: uid,
+            password: password,
+            kasmServerNeeded: false
+          })
+        })
+        .then(() => fetch(`${javaURI}/authenticate`, {
+          ...fetchOptions,
+          method: "POST",
+          body: JSON.stringify({ uid, password })
+        }))
+        .then(retryRes => {
+          if (retryRes.ok) console.log('✅ Spring login success (after auto-signup)');
+          else console.warn('⚠️ Spring login failed even after signup');
+          return retryRes;
+        });
       }
-    };
-    login(options);
+      console.log('✅ Spring login success');
+      return response;
+    })
+    .catch(err => {
+      console.warn('⚠️ Spring unavailable:', err.message);
+    });
+
+    Promise.allSettled([flaskPromise, springPromise]).then(() => {
+      window.location.href = '{{site.baseurl}}/profile';
+    });
   }
 
+  // ── Signup to BOTH backends ──
   window.signup = function() {
     const signupButton = document.querySelector("#signupForm button");
     signupButton.disabled = true;
     signupButton.style.backgroundColor = '#d3d3d3';
 
-    const signupOptions = {
-      URL: `${pythonURI}/api/user`,
-      method: "POST",
-      cache: "no-cache",
-      body: {
-        name: document.getElementById("name").value,
-        uid: document.getElementById("signupUid").value,
-        password: document.getElementById("signupPassword").value,
-      }
-    };
+    const name = document.getElementById("name").value;
+    const uid = document.getElementById("signupUid").value;
+    const password = document.getElementById("signupPassword").value;
 
-    fetch(signupOptions.URL, {
-      method: signupOptions.method,
+    // Flask signup
+    const flaskPromise = fetch(`${pythonURI}/api/user`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(signupOptions.body)
+      body: JSON.stringify({ name, uid, password })
     })
     .then(response => {
-      if (!response.ok) throw new Error(`Signup failed: ${response.status}`);
+      if (!response.ok) throw new Error(`Flask: ${response.status}`);
       return response.json();
     })
-    .then(() => {
-      document.getElementById("signupMessage").textContent = "Signup successful!";
+    .then(() => console.log('✅ Flask signup success'))
+    .catch(err => console.warn('⚠️ Flask signup failed:', err.message));
+
+    // Spring signup
+    const springPromise = fetch(`${javaURI}/api/person/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: uid,
+        sid: "0000000",
+        email: uid + "@gmail.com",
+        dob: "01-01-2000",
+        name: name,
+        password: password,
+        kasmServerNeeded: false
+      })
     })
-    .catch(error => {
-      document.getElementById("signupMessage").textContent = `Signup Error: ${error.message}`;
+    .then(response => {
+      if (!response.ok) throw new Error(`Spring: ${response.status}`);
+      return response.json();
+    })
+    .then(() => console.log('✅ Spring signup success'))
+    .catch(err => console.warn('⚠️ Spring signup failed:', err.message));
+
+    Promise.allSettled([flaskPromise, springPromise]).then(results => {
+      const anySuccess = results.some(r => r.status === 'fulfilled');
+      if (anySuccess) {
+        document.getElementById("signupMessage").textContent = "Signup successful! You can now login.";
+        document.getElementById("signupMessage").style.color = '#22c55e';
+      } else {
+        document.getElementById("signupMessage").textContent = "Signup failed on both backends. Please try again.";
+        document.getElementById("signupMessage").style.color = '#ef4444';
+      }
       signupButton.disabled = false;
       signupButton.style.backgroundColor = '';
     });
   }
 
-  function pythonDatabase() {
-    fetch(`${pythonURI}/api/user`, fetchOptions)
-      .then(response => {
-        if (!response.ok) throw new Error(`Flask server response: ${response.status}`);
-        return response.json();
-      })
-      .then(() => {
-        window.location.href = '{{site.baseurl}}/profile';
-      })
-      .catch(error => {
-        document.getElementById("message").textContent = `Login Error: ${error.message}`;
-      });
-  }
-
   window.onload = function() {
     const isAuthenticated = document.cookie.includes('auth_token');
     if (isAuthenticated) {
-      pythonDatabase();
+      fetch(`${pythonURI}/api/user`, fetchOptions)
+        .then(response => {
+          if (!response.ok) throw new Error(`${response.status}`);
+          return response.json();
+        })
+        .then(() => { window.location.href = '{{site.baseurl}}/profile'; })
+        .catch(() => {});
     }
   };
 </script>

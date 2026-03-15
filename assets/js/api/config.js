@@ -7,12 +7,15 @@ if (location.hostname === "localhost") {
         pythonURI = "https://hungerheros.opencodingsociety.com/";
 }
 export var javaURI;
+
+// LOCAL SPRING BOOT BACKEND
 if (location.hostname === "localhost") {
-        javaURI = "http://localhost:8288";
+        javaURI = "http://localhost:8585";
 } else if (location.hostname === "127.0.0.1") {
-        javaURI = "http://127.0.0.1:8288"; //rey
+        javaURI = "http://127.0.0.1:8585";
 } else {
-        javaURI = "https://hungerheros.opencodingsociety.com/";
+        // PRODUCTION SPRING BOOT BACKEND
+        javaURI = "https://spring.opencodingsociety.com";
 }
 
 export const fetchOptions = {
