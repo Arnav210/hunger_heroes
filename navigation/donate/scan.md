@@ -156,7 +156,7 @@ menu: nav/home.html
 </div>
 
 <script type="module">
-  import { pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+  import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
   const CATEGORY_MAP = {
     'canned':'🥫','fresh-produce':'🥬','dairy':'🧀','bakery':'🍞',
@@ -261,21 +261,46 @@ menu: nav/home.html
     let donation = null;
     let warnings = [];
 
-    // Try backend scan endpoint first
+    // 1. Try Spring scan endpoint first (required route)
     try {
-      const res = await fetch(`${pythonURI}/api/donations/scan`, {
+      const springRes = await fetch(`${javaURI}/api/donations/scan`, {
         ...fetchOptions,
         method: 'POST',
         body: JSON.stringify({ scan_data: id, scan_type: 'qr' })
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (springRes.ok) {
+        const data = await springRes.json();
         donation = data;
         warnings = data.warnings || [];
+        console.log('✅ Spring scan lookup');
       }
     } catch (e) {}
 
-    // Fallback: try GET endpoint
+    // 2. Fallback: Flask scan endpoint
+    if (!donation) {
+      try {
+        const res = await fetch(`${pythonURI}/api/donations/scan`, {
+          ...fetchOptions,
+          method: 'POST',
+          body: JSON.stringify({ scan_data: id, scan_type: 'qr' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          donation = data;
+          warnings = data.warnings || [];
+        }
+      } catch (e) {}
+    }
+
+    // 3. Fallback: try Spring GET by ID
+    if (!donation) {
+      try {
+        const springRes = await fetch(`${javaURI}/api/donations/${encodeURIComponent(id)}`, fetchOptions);
+        if (springRes.ok) donation = await springRes.json();
+      } catch (e) {}
+    }
+
+    // 4. Fallback: try Flask GET by ID
     if (!donation) {
       try {
         const res = await fetch(`${pythonURI}/api/donations/${encodeURIComponent(id)}`, fetchOptions);

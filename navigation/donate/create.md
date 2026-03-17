@@ -521,7 +521,7 @@ menu: nav/home.html
 </div>
 
 <script type="module">
-  import { pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+  import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
   // ---------- FOOD PRESETS: auto-fill category, storage, allergens, dietary ----------
   const foodPresets = {
@@ -810,8 +810,26 @@ menu: nav/home.html
       created_at:    new Date().toISOString()
     };
 
-    // Try to POST to backend; if it fails, use a client-side ID
+    // Try to POST to both backends; use whichever responds with an ID
     let donationId = null;
+
+    // 1. Try Spring first (required route)
+    try {
+      const springRes = await fetch(`${javaURI}/api/donations`, {
+        ...fetchOptions,
+        method: 'POST',
+        body: JSON.stringify(donationData)
+      });
+      if (springRes.ok) {
+        const result = await springRes.json();
+        donationId = result.id || result.donation_id;
+        console.log('✅ Spring donation created:', donationId);
+      }
+    } catch (e) {
+      console.log('Spring unavailable for create:', e.message);
+    }
+
+    // 2. Also save to Flask (so both databases stay in sync)
     try {
       const res = await fetch(`${pythonURI}/api/donations`, {
         ...fetchOptions,
@@ -820,10 +838,11 @@ menu: nav/home.html
       });
       if (res.ok) {
         const result = await res.json();
-        donationId = result.id || result.donation_id;
+        if (!donationId) donationId = result.id || result.donation_id;
+        console.log('✅ Flask donation created');
       }
     } catch (e) {
-      console.log('Backend unavailable, generating client-side barcode');
+      console.log('Flask unavailable for create:', e.message);
     }
 
     // Fallback: client-side ID
