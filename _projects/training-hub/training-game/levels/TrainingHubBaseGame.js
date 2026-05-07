@@ -25,6 +25,7 @@ const getMissionCopy = (visitedCount, totalCount) => {
 
 export function initTrainingHubBaseGame(root, options = {}) {
   if (!root) {
+    console.warn('TrainingHubBaseGame: training game root element not found.');
     return null;
   }
 
@@ -42,6 +43,11 @@ export function initTrainingHubBaseGame(root, options = {}) {
   const missionText = root.querySelector('[data-training-game-mission]');
 
   if (!container || !canvas || !overlay) {
+    console.warn('TrainingHubBaseGame: required training game elements were not found.', {
+      hasContainer: Boolean(container),
+      hasCanvas: Boolean(canvas),
+      hasOverlay: Boolean(overlay),
+    });
     return null;
   }
 
@@ -111,7 +117,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
       const dialogueBoxes = document.querySelectorAll('[id^="custom-dialogue-box-"]');
 
       dialogueBoxes.forEach((box) => {
-        const isVisible = box.style.display !== 'none' && box.style.display !== '';
+        const isVisible = window.getComputedStyle(box).display !== 'none';
         const wasVisible = openedDialogueBoxes.get(box.id) || false;
 
         if (isVisible && !wasVisible) {

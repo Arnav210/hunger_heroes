@@ -236,9 +236,31 @@ permalink: /training-hub/
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{{ '/assets/js/training-hub-pdfs.js' | relative_url }}"></script>
 <script type="module">
-	import initTrainingHubBaseGame from '{{ '/assets/js/projects/training-hub/training-game/levels/TrainingHubBaseGame.js' | relative_url }}';
+	const root = document.querySelector('[data-training-game-root]');
 
-	initTrainingHubBaseGame(document.querySelector('[data-training-game-root]'), {
-		basePath: '{{ site.baseurl }}',
-	});
+	try {
+		const module = await import('{{ '/assets/js/projects/training-hub/training-game/levels/TrainingHubBaseGame.js' | relative_url }}');
+		const initTrainingHubBaseGame = module.default || module.initTrainingHubBaseGame;
+
+		if (typeof initTrainingHubBaseGame === 'function') {
+			initTrainingHubBaseGame(root, {
+				basePath: '{{ site.baseurl }}',
+			});
+		} else {
+			console.warn('Training Hub: base game module loaded without an initializer.');
+		}
+	} catch (error) {
+		console.error('Training Hub: failed to load Base Game Part 1.', error);
+
+		const mission = root?.querySelector('[data-training-game-mission]');
+		const status = root?.querySelector('[data-training-game-status]');
+
+		if (status) {
+			status.textContent = 'Temporarily unavailable';
+		}
+
+		if (mission) {
+			mission.textContent = 'Base Game Part 1 could not be loaded right now. Please try the full game page instead.';
+		}
+	}
 </script>
