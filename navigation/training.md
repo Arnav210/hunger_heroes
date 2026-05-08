@@ -126,28 +126,28 @@ permalink: /training-hub/
 				<div class="training-hub-game__header">
 					<div>
 						<p class="training-hub-game__eyebrow">Base Game Part 1</p>
-						<h3>Training Mission</h3>
+						<h3>Starter Mission</h3>
 					</div>
 					<span class="training-hub-game__status-badge" data-training-game-status>Ready to launch</span>
 				</div>
 				<p>
-					Practice the core Hunger Heroes loop in a guided training-only run. The lesson now uses its own
-					onboarding floor while still running on the shared GameEngine v1.1 project setup.
+					Practice inside a lightweight starter map that keeps the shared Hunger Heroes game engine and project
+					build flow in place while your team swaps in its own copy and assets.
 				</p>
 				<ul class="training-hub-game__objectives">
 					<li>Learn the movement controls and how to open NPC dialogue.</li>
-					<li>Find all five training checkpoints mapped to the Hunger Heroes flow.</li>
-					<li>Use the Training Hub as the launch point before moving into the full donation experience.</li>
+					<li>Use a starter checkpoint map that is easy for your team to rename and restyle.</li>
+					<li>Keep the shared engine intact while the training-game project owns the placeholder content.</li>
 				</ul>
 				<div class="training-hub-game__actions">
-					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start training run</button>
+					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start starter map</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Show controls</button>
 					<a class="training-hub-button training-hub-button--ghost" href="{{ '/donate/game' | relative_url }}">Open full game page</a>
 				</div>
 				<div class="training-hub-game__stats">
 					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Stations found</span>
+						<span class="training-hub-game__stat-label">Checkpoints found</span>
 						<strong data-training-game-stat="stations">0/5</strong>
 					</div>
 					<div class="training-hub-game__stat">
@@ -166,7 +166,7 @@ permalink: /training-hub/
 					<span class="training-hub-game__progress-label" data-training-game-progress-label>0% complete</span>
 				</div>
 				<p class="training-hub-game__mission" data-training-game-mission>
-					Launch the training run, then use WASD to move and E to interact with your first checkpoint.
+					Launch the starter map, then use WASD to move and E to interact with your first checkpoint.
 				</p>
 				<div class="training-hub-game__shell">
 					<div class="training-hub-game__stage" id="gameArea">
@@ -176,11 +176,11 @@ permalink: /training-hub/
 						</div>
 						<div class="training-hub-game__overlay" data-training-game-overlay>
 							<div class="training-hub-game__overlay-card">
-								<p class="training-hub-game__overlay-eyebrow">Interactive lesson</p>
-								<h4>Train on the onboarding floor</h4>
+								<p class="training-hub-game__overlay-eyebrow">Starter map</p>
+								<h4>Customize this training shell</h4>
 								<p>
-									Start Base Game Part 1 to walk the training floor, clear each checkpoint, and build confidence
-									before using the live donation tools.
+									This map is intentionally lightweight. Keep the engine, replace the checkpoint copy, and swap
+									project assets when your team is ready.
 								</p>
 								<div class="training-hub-game__controls-grid" aria-label="Game controls">
 									<div><kbd>W A S D</kbd><span>Move</span></div>
@@ -189,19 +189,19 @@ permalink: /training-hub/
 									<div><kbd>Mouse</kbd><span>Open dialogue</span></div>
 								</div>
 								<div class="training-hub-game__overlay-actions">
-									<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start Base Game Part 1</button>
+									<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start starter map</button>
 									<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
-									<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-dismiss>Continue browsing hub</button>
+									<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-dismiss>Close overlay</button>
 								</div>
 							</div>
 						</div>
 					</div>
 					<div class="training-hub-game__footer">
 						<div>
-							<strong>Connected experience</strong>
+							<strong>Project-backed placeholder</strong>
 							<p class="training-hub-game__status">
-								This lesson now runs on a Training Hub-specific level while still using the shared sprite
-								generator, GameEngine v1.1, and project asset pipeline already shipped with the site.
+								This starter run lives in the training-game project, supports project assets, and keeps the
+								shared GameEngine v1.1 untouched.
 							</p>
 						</div>
 						<div class="training-hub-game__links">

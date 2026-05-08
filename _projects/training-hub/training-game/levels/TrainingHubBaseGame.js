@@ -1,14 +1,9 @@
 import { GameCore } from '../../../../GameEnginev1.1/essentials/Game.js';
 import GameControl from '../../../../GameEnginev1.1/essentials/GameControl.js';
+import { TRAINING_HUB_CHECKPOINT_IDS } from './TrainingHubMissionConfig.js';
 import TrainingHubMissionLevel from './TrainingHubMissionLevel.js';
 
-const NPC_IDS = [
-  'BriefingStation',
-  'IntakeStation',
-  'MatchingStation',
-  'DispatchStation',
-  'VerificationStation',
-];
+const NPC_IDS = TRAINING_HUB_CHECKPOINT_IDS;
 const FULLSCREEN_COPY = {
   enter: 'Go full screen',
   exit: 'Exit full screen',
@@ -22,15 +17,15 @@ const formatTime = (seconds) => {
 
 const getMissionCopy = (visitedCount, totalCount) => {
   if (visitedCount === 0) {
-    return 'Launch the training run, then use WASD to move and E to interact with your first checkpoint.';
+    return 'Launch the starter map, then use WASD to move and E to interact with your first checkpoint.';
   }
 
   if (visitedCount >= totalCount) {
-    return 'Mission complete - you cleared every checkpoint on the Training Hub floor.';
+    return 'Mission complete - you cleared every starter checkpoint and the map is ready for team-specific content.';
   }
 
   const remaining = totalCount - visitedCount;
-  return `Keep exploring - ${remaining} ${remaining === 1 ? 'checkpoint' : 'checkpoints'} left to complete the training run.`;
+  return `Keep exploring - ${remaining} ${remaining === 1 ? 'checkpoint' : 'checkpoints'} left to complete the starter map.`;
 };
 
 export function initTrainingHubBaseGame(root, options = {}) {
@@ -88,8 +83,18 @@ export function initTrainingHubBaseGame(root, options = {}) {
       || stage.msRequestFullscreen)
   );
 
+  const getViewportDimensions = () => ({
+    innerWidth: Math.max(container.clientWidth || stage?.clientWidth || 1, 1),
+    innerHeight: Math.max(container.clientHeight || stage?.clientHeight || 1, 1),
+  });
+
   const syncViewport = () => {
-    window.dispatchEvent(new Event('resize'));
+    const viewport = getViewportDimensions();
+
+    if (gameInstance?.environment) {
+      gameInstance.environment.innerWidth = viewport.innerWidth;
+      gameInstance.environment.innerHeight = viewport.innerHeight;
+    }
 
     const activeControl = gameInstance?.activeGameControl || gameInstance?.gameControl;
     const currentLevel = activeControl?.currentLevel;
@@ -259,7 +264,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
     gameStartTime = Date.now();
 
     if (statusBadge) {
-      statusBadge.textContent = 'Training live';
+      statusBadge.textContent = 'Starter map live';
     }
 
     updateStats();
@@ -271,6 +276,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
         path: options.basePath || '',
         gameContainer: container,
         gameCanvas: canvas,
+        ...getViewportDimensions(),
         gameLevelClasses: [TrainingHubMissionLevel],
         disablePauseMenu: true,
         disableContainerAdjustment: true,
@@ -318,7 +324,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
     getState: () => ({
       gameStarted,
       dialoguesCompleted,
-      visitedStations: Array.from(visitedNpcs),
+      visitedCheckpoints: Array.from(visitedNpcs),
     }),
   };
 }
