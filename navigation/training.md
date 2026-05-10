@@ -126,23 +126,13 @@ permalink: /training-hub/
 				<div class="training-hub-game__header">
 					<div>
 						<p class="training-hub-game__eyebrow">Base Game Part 1</p>
-						<h3>Starter Mission</h3>
 					</div>
 					<span class="training-hub-game__status-badge" data-training-game-status>Ready to launch</span>
 				</div>
-				<p>
-					Practice inside a lightweight starter map that keeps the shared Hunger Heroes game engine and project
-					build flow in place while your team swaps in its own copy and assets.
-				</p>
-				<ul class="training-hub-game__objectives">
-					<li>Learn the movement controls and how to open NPC dialogue.</li>
-					<li>Use a starter checkpoint map that is easy for your team to rename and restyle.</li>
-					<li>Keep the shared engine intact while the training-game project owns the placeholder content.</li>
-				</ul>
 				<div class="training-hub-game__actions">
-					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start starter map</button>
+					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start game</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
-					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Show controls</button>
+					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Controls</button>
 				</div>
 				<div class="training-hub-game__stats">
 					<div class="training-hub-game__stat">
@@ -194,16 +184,6 @@ permalink: /training-hub/
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class="training-hub-game__footer">
-						<div>
-							<strong>Project-backed placeholder</strong>
-							<p class="training-hub-game__status">
-								This starter run lives in the training-game project, supports project assets, and keeps the
-								shared GameEngine v1.1 untouched.
-							</p>
-						</div>
-
 					</div>
 				</div>
 			</article>
