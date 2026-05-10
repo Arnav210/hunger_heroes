@@ -491,6 +491,64 @@
 	top: 0;
 }
 
+.training-hub-game__pause-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	height: 48px;
+	left: 12px;
+	padding: 0;
+	position: absolute;
+	top: 12px;
+	width: 48px;
+	z-index: 2;
+}
+
+.training-hub-game__pause-menu {
+	align-items: center;
+	display: flex;
+	inset: 0;
+	justify-content: center;
+	position: absolute;
+	z-index: 3;
+}
+
+.training-hub-game__pause-menu[hidden] {
+	display: none;
+}
+
+.training-hub-game__pause-menu-inner {
+	display: inline-block;
+	position: relative;
+}
+
+.training-hub-game__pause-menu-img {
+	display: block;
+	width: 320px;
+	height: auto;
+}
+
+.training-hub-game__pause-menu-btn {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	position: absolute;
+}
+
+.training-hub-game__pause-menu-btn--resume {
+	height: 28%;
+	left: 13%;
+	top: 20%;
+	width: 74%;
+}
+
+.training-hub-game__pause-menu-btn--exit {
+	height: 25%;
+	left: 13%;
+	top: 53%;
+	width: 74%;
+}
+
 .training-hub-game__overlay {
 	align-items: stretch;
 	background: rgba(15, 23, 42, 0.86);

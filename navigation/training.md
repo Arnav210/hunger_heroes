@@ -126,44 +126,13 @@ permalink: /training-hub/
 				<div class="training-hub-game__header">
 					<div>
 						<p class="training-hub-game__eyebrow">Base Game Part 1</p>
-						<h3>Starter Mission</h3>
 					</div>
 					<span class="training-hub-game__status-badge" data-training-game-status>Ready to launch</span>
 				</div>
-				<p>
-					Practice inside a lightweight starter map that keeps the shared Hunger Heroes game engine and project
-					build flow in place while your team swaps in its own copy and assets.
-				</p>
-				<ul class="training-hub-game__objectives">
-					<li>Learn the movement controls and how to open NPC dialogue.</li>
-					<li>Use a starter checkpoint map that is easy for your team to rename and restyle.</li>
-					<li>Keep the shared engine intact while the training-game project owns the placeholder content.</li>
-				</ul>
 				<div class="training-hub-game__actions">
-					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start starter map</button>
+					<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-start>Start game</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
-					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Show controls</button>
-					<a class="training-hub-button training-hub-button--ghost" href="{{ '/donate/game' | relative_url }}">Open full game page</a>
-				</div>
-				<div class="training-hub-game__stats">
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Checkpoints found</span>
-						<strong data-training-game-stat="stations">0/5</strong>
-					</div>
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Dialogues opened</span>
-						<strong data-training-game-stat="dialogues">0</strong>
-					</div>
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Time in lesson</span>
-						<strong data-training-game-stat="time">0:00</strong>
-					</div>
-				</div>
-				<div class="training-hub-game__progress" aria-label="Lesson progress">
-					<div class="training-hub-game__progress-bar">
-						<span class="training-hub-game__progress-fill" data-training-game-progress-fill></span>
-					</div>
-					<span class="training-hub-game__progress-label" data-training-game-progress-label>0% complete</span>
+					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Controls</button>
 				</div>
 				<p class="training-hub-game__mission" data-training-game-mission>
 					Launch the starter map, then use WASD to move and E to interact with your first checkpoint.
@@ -171,6 +140,26 @@ permalink: /training-hub/
 				<div class="training-hub-game__shell">
 					<div class="training-hub-game__stage" id="gameArea">
 						<div class="training-hub-game__container" id="gameContainer" tabindex="0">
+							<button class="training-hub-game__pause-btn" type="button" data-training-game-pause aria-label="Pause game">
+								<img
+									src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Button.png' | relative_url }}"
+									alt=""
+									aria-hidden="true"
+									width="48"
+									height="48"
+								/>
+							</button>
+							<div class="training-hub-game__pause-menu" data-training-game-pause-menu hidden>
+								<div class="training-hub-game__pause-menu-inner">
+									<img
+										class="training-hub-game__pause-menu-img"
+										src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Menu.png' | relative_url }}"
+										alt="Pause menu"
+									/>
+									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--resume" type="button" data-training-game-resume aria-label="Resume game"></button>
+									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" aria-label="Save and exit"></button>
+								</div>
+							</div>
 							<div id="promptDropDown" class="promptDropDown"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
 						</div>
@@ -194,20 +183,6 @@ permalink: /training-hub/
 									<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-dismiss>Close overlay</button>
 								</div>
 							</div>
-						</div>
-					</div>
-					<div class="training-hub-game__footer">
-						<div>
-							<strong>Project-backed placeholder</strong>
-							<p class="training-hub-game__status">
-								This starter run lives in the training-game project, supports project assets, and keeps the
-								shared GameEngine v1.1 untouched.
-							</p>
-						</div>
-						<div class="training-hub-game__links">
-							<a href="{{ '/donate/create' | relative_url }}">Create</a>
-							<a href="{{ '/donate/browse' | relative_url }}">Browse</a>
-							<a href="{{ '/donate/scan' | relative_url }}">Scan</a>
 						</div>
 					</div>
 				</div>
