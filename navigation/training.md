@@ -140,6 +140,12 @@ permalink: /training-hub/
 				<div class="training-hub-game__shell">
 					<div class="training-hub-game__stage" id="gameArea">
 						<div class="training-hub-game__container" id="gameContainer" tabindex="0">
+							<img
+								class="training-hub-game__pause-btn"
+								src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Button.png' | relative_url }}"
+								alt="Pause"
+								aria-hidden="true"
+							/>
 							<div id="promptDropDown" class="promptDropDown"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
 						</div>

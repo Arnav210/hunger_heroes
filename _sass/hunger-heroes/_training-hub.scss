@@ -491,6 +491,16 @@
 	top: 0;
 }
 
+.training-hub-game__pause-btn {
+	height: auto;
+	left: 12px;
+	pointer-events: none;
+	position: absolute;
+	top: 12px;
+	width: 48px;
+	z-index: 1;
+}
+
 .training-hub-game__overlay {
 	align-items: stretch;
 	background: rgba(15, 23, 42, 0.86);

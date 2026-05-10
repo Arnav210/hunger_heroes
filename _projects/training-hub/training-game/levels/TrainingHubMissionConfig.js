@@ -10,7 +10,7 @@ const TRAINING_HUB_MISSION_CONFIG = {
   displayName: 'Team Starter Map',
   background: {
     name: 'Conveyor Belt Training Map',
-    assetPath: '/images/Conveyor_Background.png',
+    assetPath: `${PROJECT_ASSET_ROOT}/backgrounds/Conveyor_Background.png`,
     fallbackTheme: 'warehouse',
     pixels: { width: 1006, height: 508 },
   },
