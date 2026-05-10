@@ -134,26 +134,6 @@ permalink: /training-hub/
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Controls</button>
 				</div>
-				<div class="training-hub-game__stats">
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Checkpoints found</span>
-						<strong data-training-game-stat="stations">0/5</strong>
-					</div>
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Dialogues opened</span>
-						<strong data-training-game-stat="dialogues">0</strong>
-					</div>
-					<div class="training-hub-game__stat">
-						<span class="training-hub-game__stat-label">Time in lesson</span>
-						<strong data-training-game-stat="time">0:00</strong>
-					</div>
-				</div>
-				<div class="training-hub-game__progress" aria-label="Lesson progress">
-					<div class="training-hub-game__progress-bar">
-						<span class="training-hub-game__progress-fill" data-training-game-progress-fill></span>
-					</div>
-					<span class="training-hub-game__progress-label" data-training-game-progress-label>0% complete</span>
-				</div>
 				<p class="training-hub-game__mission" data-training-game-mission>
 					Launch the starter map, then use WASD to move and E to interact with your first checkpoint.
 				</p>
