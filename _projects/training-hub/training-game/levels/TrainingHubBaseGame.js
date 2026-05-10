@@ -48,6 +48,9 @@ export function initTrainingHubBaseGame(root, options = {}) {
   const timeStat = root.querySelector('[data-training-game-stat="time"]');
   const statusBadge = root.querySelector('[data-training-game-status]');
   const missionText = root.querySelector('[data-training-game-mission]');
+  const pauseButton = root.querySelector('[data-training-game-pause]');
+  const pauseMenu = root.querySelector('[data-training-game-pause-menu]');
+  const resumeButton = root.querySelector('[data-training-game-resume]');
 
   if (!container || !canvas || !overlay) {
     console.warn('TrainingHubBaseGame: required training game elements were not found.', {
@@ -142,6 +145,18 @@ export function initTrainingHubBaseGame(root, options = {}) {
 
   const showOverlay = () => {
     overlay.hidden = false;
+  };
+
+  const showPauseMenu = () => {
+    if (pauseMenu) {
+      pauseMenu.hidden = false;
+    }
+  };
+
+  const hidePauseMenu = () => {
+    if (pauseMenu) {
+      pauseMenu.hidden = true;
+    }
   };
 
   const updateFullscreenButtons = () => {
@@ -302,6 +317,14 @@ export function initTrainingHubBaseGame(root, options = {}) {
   fullscreenButtons.forEach((button) => {
     button.addEventListener('click', toggleFullscreen);
   });
+
+  if (pauseButton) {
+    pauseButton.addEventListener('click', showPauseMenu);
+  }
+
+  if (resumeButton) {
+    resumeButton.addEventListener('click', hidePauseMenu);
+  }
 
   overlay.addEventListener('click', (event) => {
     if (event.target.matches('[data-training-game-dismiss]')) {

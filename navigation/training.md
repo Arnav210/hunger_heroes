@@ -140,12 +140,26 @@ permalink: /training-hub/
 				<div class="training-hub-game__shell">
 					<div class="training-hub-game__stage" id="gameArea">
 						<div class="training-hub-game__container" id="gameContainer" tabindex="0">
-							<img
-								class="training-hub-game__pause-btn"
-								src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Button.png' | relative_url }}"
-								alt="Pause"
-								aria-hidden="true"
-							/>
+							<button class="training-hub-game__pause-btn" type="button" data-training-game-pause aria-label="Pause game">
+								<img
+									src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Button.png' | relative_url }}"
+									alt=""
+									aria-hidden="true"
+									width="48"
+									height="48"
+								/>
+							</button>
+							<div class="training-hub-game__pause-menu" data-training-game-pause-menu hidden>
+								<div class="training-hub-game__pause-menu-inner">
+									<img
+										class="training-hub-game__pause-menu-img"
+										src="{{ '/assets/projects/training-hub/training-game/backgrounds/Pause_Menu.png' | relative_url }}"
+										alt="Pause menu"
+									/>
+									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--resume" type="button" data-training-game-resume aria-label="Resume game"></button>
+									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" aria-label="Save and exit"></button>
+								</div>
+							</div>
 							<div id="promptDropDown" class="promptDropDown"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
 						</div>
