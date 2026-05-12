@@ -463,6 +463,24 @@
 	position: relative;
 }
 
+.training-hub-game__side-arrow {
+	height: auto;
+	pointer-events: none;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 96px;
+	z-index: 1;
+}
+
+.training-hub-game__side-arrow--fail {
+	left: 8px;
+}
+
+.training-hub-game__side-arrow--pass {
+	right: 16px;
+}
+
 .training-hub-game__stage:fullscreen,
 .training-hub-game__stage:-webkit-full-screen {
 	height: 100vh;
