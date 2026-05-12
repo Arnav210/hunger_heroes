@@ -134,6 +134,26 @@ permalink: /training-hub/
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-fullscreen>Go full screen</button>
 					<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-help>Controls</button>
 				</div>
+				<div class="training-hub-game__stats" aria-label="Training run stats">
+					<div class="training-hub-game__stat">
+						<span class="training-hub-game__stat-label">Checkpoints</span>
+						<strong data-training-game-stat="stations">0/5</strong>
+					</div>
+					<div class="training-hub-game__stat">
+						<span class="training-hub-game__stat-label">Dialogues</span>
+						<strong data-training-game-stat="dialogues">0</strong>
+					</div>
+					<div class="training-hub-game__stat">
+						<span class="training-hub-game__stat-label">Elapsed</span>
+						<strong data-training-game-stat="time">0:00</strong>
+					</div>
+				</div>
+				<div class="training-hub-game__progress" aria-label="Training map progress">
+					<div class="training-hub-game__progress-bar">
+						<span class="training-hub-game__progress-fill" data-training-game-progress-fill></span>
+					</div>
+					<span class="training-hub-game__progress-label" data-training-game-progress-label>0% complete</span>
+				</div>
 				<p class="training-hub-game__mission" data-training-game-mission>
 					Launch the starter map, then use WASD to move and E to interact with your first checkpoint.
 				</p>
@@ -157,7 +177,7 @@ permalink: /training-hub/
 										alt="Pause menu"
 									/>
 									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--resume" type="button" data-training-game-resume aria-label="Resume game"></button>
-									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" aria-label="Save and exit"></button>
+									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" data-training-game-exit aria-label="Save and exit"></button>
 								</div>
 							</div>
 							<div id="promptDropDown" class="promptDropDown"></div>
@@ -185,6 +205,27 @@ permalink: /training-hub/
 							</div>
 						</div>
 					</div>
+				</div>
+				<div class="training-hub-game__footer">
+					<div>
+						<strong>Save and compare runs</strong>
+						<p class="training-hub-game__status" data-training-game-feedback>
+							Save a session to sync it to Spring. If the backend is offline, the run stays available in local browser storage.
+						</p>
+					</div>
+					<div class="training-hub-game__footer-actions">
+						<button class="training-hub-button training-hub-button--primary" type="button" data-training-game-save>Save run</button>
+						<button class="training-hub-button training-hub-button--secondary" type="button" data-training-game-refresh>Refresh leaderboard</button>
+					</div>
+				</div>
+				<div class="training-hub-game__leaderboard" aria-live="polite">
+					<div class="training-hub-game__leaderboard-header">
+						<strong>Training leaderboard</strong>
+						<span class="training-hub-game__leaderboard-source" data-training-game-source>Loading...</span>
+					</div>
+					<ol class="training-hub-game__leaderboard-list" data-training-game-leaderboard>
+						<li class="training-hub-game__leaderboard-empty">Loading recent runs...</li>
+					</ol>
 				</div>
 			</article>
 		</div>

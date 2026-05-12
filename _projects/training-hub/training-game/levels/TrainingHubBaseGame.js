@@ -1,9 +1,16 @@
 import { GameCore } from '../../../../GameEnginev1.1/essentials/Game.js';
 import GameControl from '../../../../GameEnginev1.1/essentials/GameControl.js';
+import {
+  TRAINING_HUB_LEVEL_ID,
+  createTrainingHubSession,
+  fetchTrainingHubLeaderboard,
+  saveTrainingHubSession,
+} from './TrainingHubSessionApi.js';
 import { TRAINING_HUB_CHECKPOINT_IDS } from './TrainingHubMissionConfig.js';
 import TrainingHubMissionLevel from './TrainingHubMissionLevel.js';
 
 const NPC_IDS = TRAINING_HUB_CHECKPOINT_IDS;
+const LEADERBOARD_LIMIT = 5;
 const FULLSCREEN_COPY = {
   enter: 'Go full screen',
   exit: 'Exit full screen',
@@ -28,6 +35,66 @@ const getMissionCopy = (visitedCount, totalCount) => {
   return `Keep exploring - ${remaining} ${remaining === 1 ? 'checkpoint' : 'checkpoints'} left to complete the starter map.`;
 };
 
+const formatSavedAt = (value) => {
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Saved recently';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(parsedDate);
+};
+
+const getSourceCopy = (source) => {
+  switch (source) {
+    case 'spring':
+      return 'Spring sync';
+    case 'local':
+      return 'Local fallback';
+    case 'offline':
+      return 'Offline cache';
+    default:
+      return 'Unavailable';
+  }
+};
+
+const getSaveSignature = (session) => [
+  session.checkpoints_visited,
+  session.dialogues_completed,
+  session.time_played_seconds,
+  session.checkpoints.join(','),
+].join('|');
+
+const buildLeaderboardItem = (entry, index) => {
+  const item = document.createElement('li');
+  const rank = document.createElement('span');
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  const meta = document.createElement('span');
+  const score = document.createElement('span');
+
+  item.className = 'training-hub-game__leaderboard-item';
+  rank.className = 'training-hub-game__leaderboard-rank';
+  copy.className = 'training-hub-game__leaderboard-copy';
+  meta.className = 'training-hub-game__leaderboard-meta';
+  score.className = 'training-hub-game__leaderboard-score';
+
+  rank.textContent = `#${index + 1}`;
+  title.textContent = entry.player_name || 'Volunteer';
+  meta.textContent = `${entry.checkpoints_visited}/${entry.checkpoints_total} checkpoints - ${entry.dialogues_completed} dialogues - ${formatTime(entry.time_played_seconds)} - ${formatSavedAt(entry.created_at)}`;
+  score.textContent = `${entry.score} pts`;
+
+  copy.append(title, meta);
+  item.append(rank, copy, score);
+
+  return item;
+};
+
 export function initTrainingHubBaseGame(root, options = {}) {
   if (!root) {
     console.warn('TrainingHubBaseGame: training game root element not found.');
@@ -48,9 +115,15 @@ export function initTrainingHubBaseGame(root, options = {}) {
   const timeStat = root.querySelector('[data-training-game-stat="time"]');
   const statusBadge = root.querySelector('[data-training-game-status]');
   const missionText = root.querySelector('[data-training-game-mission]');
+  const feedbackText = root.querySelector('[data-training-game-feedback]');
+  const leaderboardList = root.querySelector('[data-training-game-leaderboard]');
+  const leaderboardSource = root.querySelector('[data-training-game-source]');
+  const saveButton = root.querySelector('[data-training-game-save]');
+  const refreshButton = root.querySelector('[data-training-game-refresh]');
   const pauseButton = root.querySelector('[data-training-game-pause]');
   const pauseMenu = root.querySelector('[data-training-game-pause-menu]');
   const resumeButton = root.querySelector('[data-training-game-resume]');
+  const exitButton = root.querySelector('[data-training-game-exit]');
 
   if (!container || !canvas || !overlay) {
     console.warn('TrainingHubBaseGame: required training game elements were not found.', {
@@ -67,8 +140,60 @@ export function initTrainingHubBaseGame(root, options = {}) {
   let dialoguePollId = null;
   let timerId = null;
   let dialoguesCompleted = 0;
+  let resizeObserver = null;
+  let lastSavedSignature = null;
   const openedDialogueBoxes = new Map();
+  const completedDialogueBoxes = new Set();
   const visitedNpcs = new Set();
+
+  const setFeedback = (message) => {
+    if (feedbackText) {
+      feedbackText.textContent = message;
+    }
+  };
+
+  const setButtonBusy = (button, busyLabel) => {
+    if (!button) {
+      return;
+    }
+
+    if (!button.dataset.defaultLabel) {
+      button.dataset.defaultLabel = button.textContent;
+    }
+
+    button.disabled = true;
+    button.textContent = busyLabel;
+  };
+
+  const clearButtonBusy = (button) => {
+    if (!button) {
+      return;
+    }
+
+    button.disabled = false;
+
+    if (button.dataset.defaultLabel) {
+      button.textContent = button.dataset.defaultLabel;
+    }
+  };
+
+  const getActiveControl = () => gameInstance?.getActiveControl?.() || gameInstance?.activeGameControl || gameInstance?.gameControl || null;
+
+  const pauseActiveGame = () => {
+    const activeControl = getActiveControl();
+
+    if (activeControl && !activeControl.isPaused && typeof activeControl.pause === 'function') {
+      activeControl.pause();
+    }
+  };
+
+  const resumeActiveGame = () => {
+    const activeControl = getActiveControl();
+
+    if (activeControl && activeControl.isPaused && typeof activeControl.resume === 'function') {
+      activeControl.resume();
+    }
+  };
 
   const getFullscreenElement = () => (
     document.fullscreenElement
@@ -109,9 +234,15 @@ export function initTrainingHubBaseGame(root, options = {}) {
     }
   };
 
+  const scheduleViewportSync = () => {
+    if (gameStarted) {
+      window.requestAnimationFrame(syncViewport);
+    }
+  };
+
   const updateStats = () => {
     const visitedCount = visitedNpcs.size;
-    const completion = Math.round((visitedCount / NPC_IDS.length) * 100);
+    const completion = NPC_IDS.length > 0 ? Math.round((visitedCount / NPC_IDS.length) * 100) : 0;
 
     if (stationStat) {
       stationStat.textContent = `${visitedCount}/${NPC_IDS.length}`;
@@ -147,15 +278,174 @@ export function initTrainingHubBaseGame(root, options = {}) {
     overlay.hidden = false;
   };
 
+  const renderLeaderboard = (entries, source) => {
+    if (leaderboardSource) {
+      leaderboardSource.textContent = getSourceCopy(source);
+    }
+
+    if (!leaderboardList) {
+      return;
+    }
+
+    leaderboardList.replaceChildren();
+
+    if (!entries.length) {
+      const emptyState = document.createElement('li');
+      emptyState.className = 'training-hub-game__leaderboard-empty';
+      emptyState.textContent = 'No saved training runs yet. Finish a route and save it to create the first entry.';
+      leaderboardList.append(emptyState);
+      return;
+    }
+
+    entries.forEach((entry, index) => {
+      leaderboardList.append(buildLeaderboardItem(entry, index));
+    });
+  };
+
+  const loadLeaderboard = async ({ preserveFeedback = false } = {}) => {
+    if (leaderboardSource) {
+      leaderboardSource.textContent = 'Loading...';
+    }
+
+    setButtonBusy(refreshButton, 'Loading...');
+
+    try {
+      const { data, source } = await fetchTrainingHubLeaderboard(LEADERBOARD_LIMIT);
+      renderLeaderboard(data, source);
+
+      if (!preserveFeedback) {
+        if (source === 'spring') {
+          setFeedback('Recent training runs loaded from Spring.');
+        } else if (source === 'local') {
+          setFeedback('Showing locally saved runs until Spring is available.');
+        } else {
+          setFeedback('No saved training runs yet. Finish a route and save it to seed the leaderboard.');
+        }
+      }
+
+      return { data, source };
+    } catch (error) {
+      console.warn('TrainingHubBaseGame: failed to load leaderboard.', error);
+      renderLeaderboard([], 'offline');
+
+      if (!preserveFeedback) {
+        setFeedback('The leaderboard is unavailable right now. Local saves will still appear here when available.');
+      }
+
+      return { data: [], source: 'offline' };
+    } finally {
+      clearButtonBusy(refreshButton);
+    }
+  };
+
+  const getSessionSnapshot = () => createTrainingHubSession({
+    playerName: options.playerName,
+    levelId: TRAINING_HUB_LEVEL_ID,
+    checkpointsVisited: visitedNpcs.size,
+    checkpointsTotal: NPC_IDS.length,
+    dialoguesCompleted,
+    timePlayedSeconds: gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0,
+    visitedCheckpoints: Array.from(visitedNpcs),
+  });
+
+  const saveRun = async ({ quiet = false } = {}) => {
+    if (!gameStarted || !gameStartTime) {
+      if (!quiet) {
+        setFeedback('Start the map before saving a training run.');
+      }
+
+      return { saved: false, reason: 'not-started' };
+    }
+
+    const session = getSessionSnapshot();
+
+    if (session.checkpoints_visited === 0) {
+      if (!quiet) {
+        setFeedback('Visit at least one checkpoint before saving a training run.');
+      }
+
+      return { saved: false, reason: 'no-progress' };
+    }
+
+    const signature = getSaveSignature(session);
+
+    if (signature === lastSavedSignature) {
+      if (!quiet) {
+        setFeedback('This run is already saved. Explore a little more before saving again.');
+      }
+
+      return { saved: false, reason: 'duplicate' };
+    }
+
+    setButtonBusy(saveButton, 'Saving run...');
+
+    if (statusBadge) {
+      statusBadge.textContent = 'Saving run';
+    }
+
+    try {
+      const { data, source } = await saveTrainingHubSession(session);
+      lastSavedSignature = signature;
+
+      if (statusBadge) {
+        statusBadge.textContent = source === 'spring' ? 'Synced to Spring' : 'Saved locally';
+      }
+
+      if (!quiet) {
+        setFeedback(`Saved ${data.player_name}'s run with ${data.score} points via ${getSourceCopy(source).toLowerCase()}.`);
+      }
+
+      await loadLeaderboard({ preserveFeedback: quiet });
+
+      return { saved: true, data, source };
+    } catch (error) {
+      console.warn('TrainingHubBaseGame: failed to save training run.', error);
+
+      if (statusBadge) {
+        statusBadge.textContent = 'Save unavailable';
+      }
+
+      if (!quiet) {
+        setFeedback('This run could not be saved right now. Please try again after making more progress.');
+      }
+
+      return { saved: false, reason: 'error', error };
+    } finally {
+      clearButtonBusy(saveButton);
+    }
+  };
+
   const showPauseMenu = () => {
+    pauseActiveGame();
+
     if (pauseMenu) {
       pauseMenu.hidden = false;
+    }
+
+    if (statusBadge) {
+      statusBadge.textContent = 'Run paused';
     }
   };
 
   const hidePauseMenu = () => {
     if (pauseMenu) {
       pauseMenu.hidden = true;
+    }
+  };
+
+  const resumeSession = () => {
+    hidePauseMenu();
+    hideOverlay();
+
+    if (gameStarted) {
+      resumeActiveGame();
+
+      if (statusBadge) {
+        statusBadge.textContent = 'Starter map live';
+      }
+
+      container.focus();
+      scheduleViewportSync();
     }
   };
 
@@ -250,7 +540,10 @@ export function initTrainingHubBaseGame(root, options = {}) {
         const wasVisible = openedDialogueBoxes.get(box.id) || false;
 
         if (isVisible && !wasVisible) {
-          dialoguesCompleted += 1;
+          if (!completedDialogueBoxes.has(box.id)) {
+            completedDialogueBoxes.add(box.id);
+            dialoguesCompleted = completedDialogueBoxes.size;
+          }
 
           for (const npcId of NPC_IDS) {
             if (box.id.includes(npcId)) {
@@ -269,18 +562,26 @@ export function initTrainingHubBaseGame(root, options = {}) {
 
   const startGame = () => {
     hideOverlay();
+    hidePauseMenu();
 
     if (gameStarted) {
-      container.focus();
+      resumeSession();
       return;
     }
 
     gameStarted = true;
     gameStartTime = Date.now();
+    dialoguesCompleted = 0;
+    openedDialogueBoxes.clear();
+    completedDialogueBoxes.clear();
+    visitedNpcs.clear();
+    lastSavedSignature = null;
 
     if (statusBadge) {
       statusBadge.textContent = 'Starter map live';
     }
+
+    setFeedback('Explore the starter map, then save a run to sync it to Spring or keep it locally while the backend is offline.');
 
     updateStats();
     startClock();
@@ -299,10 +600,44 @@ export function initTrainingHubBaseGame(root, options = {}) {
       GameControl,
     );
 
-    syncViewport();
+    scheduleViewportSync();
+    container.focus();
 
-    if (gameInstance && options.onStart instanceof Function) {
+    if (gameInstance && typeof options.onStart === 'function') {
       options.onStart(gameInstance);
+    }
+
+    void loadLeaderboard({ preserveFeedback: true });
+  };
+
+  const showHelp = () => {
+    if (gameStarted) {
+      pauseActiveGame();
+
+      if (statusBadge) {
+        statusBadge.textContent = 'Reviewing controls';
+      }
+    }
+
+    hidePauseMenu();
+    showOverlay();
+  };
+
+  const handleExit = async () => {
+    const saveResult = await saveRun({ quiet: true });
+
+    hidePauseMenu();
+    showOverlay();
+    pauseActiveGame();
+
+    if (statusBadge) {
+      statusBadge.textContent = 'Run paused';
+    }
+
+    if (saveResult.saved) {
+      setFeedback(`Run paused after saving ${saveResult.data.score} points via ${getSourceCopy(saveResult.source).toLowerCase()}. Use Start game to resume.`);
+    } else {
+      setFeedback('Run paused. Use Start game to resume, or save the run after you reach a checkpoint.');
     }
   };
 
@@ -311,24 +646,53 @@ export function initTrainingHubBaseGame(root, options = {}) {
   });
 
   helpButtons.forEach((button) => {
-    button.addEventListener('click', showOverlay);
+    button.addEventListener('click', showHelp);
   });
 
   fullscreenButtons.forEach((button) => {
     button.addEventListener('click', toggleFullscreen);
   });
 
+  if (saveButton) {
+    saveButton.addEventListener('click', () => {
+      void saveRun();
+    });
+  }
+
+  if (refreshButton) {
+    refreshButton.addEventListener('click', () => {
+      void loadLeaderboard();
+    });
+  }
+
   if (pauseButton) {
-    pauseButton.addEventListener('click', showPauseMenu);
+    pauseButton.addEventListener('click', () => {
+      if (!gameStarted) {
+        showOverlay();
+        return;
+      }
+
+      showPauseMenu();
+    });
   }
 
   if (resumeButton) {
-    resumeButton.addEventListener('click', hidePauseMenu);
+    resumeButton.addEventListener('click', resumeSession);
+  }
+
+  if (exitButton) {
+    exitButton.addEventListener('click', () => {
+      void handleExit();
+    });
   }
 
   overlay.addEventListener('click', (event) => {
     if (event.target.matches('[data-training-game-dismiss]')) {
-      hideOverlay();
+      if (gameStarted) {
+        resumeSession();
+      } else {
+        hideOverlay();
+      }
     }
   });
 
@@ -336,18 +700,35 @@ export function initTrainingHubBaseGame(root, options = {}) {
   document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
   document.addEventListener('mozfullscreenchange', handleFullscreenChange);
   document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+  window.addEventListener('resize', scheduleViewportSync);
+  window.addEventListener('orientationchange', scheduleViewportSync);
+
+  if (typeof window.ResizeObserver === 'function') {
+    resizeObserver = new window.ResizeObserver(() => {
+      scheduleViewportSync();
+    });
+    resizeObserver.observe(container);
+
+    if (stage && stage !== container) {
+      resizeObserver.observe(stage);
+    }
+  }
 
   updateStats();
   updateFullscreenButtons();
+  void loadLeaderboard();
 
   return {
     start: startGame,
-    showHelp: showOverlay,
+    save: () => saveRun(),
+    showHelp,
+    refreshLeaderboard: () => loadLeaderboard(),
     toggleFullscreen,
     getState: () => ({
       gameStarted,
       dialoguesCompleted,
       visitedCheckpoints: Array.from(visitedNpcs),
+      resizeObserverActive: Boolean(resizeObserver),
     }),
   };
 }
