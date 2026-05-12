@@ -159,6 +159,18 @@ permalink: /training-hub/
 				</p>
 				<div class="training-hub-game__shell">
 					<div class="training-hub-game__stage" id="gameArea">
+						<img
+							class="training-hub-game__side-arrow training-hub-game__side-arrow--fail"
+							src="{{ '/assets/projects/training-hub/training-game/Fail Arrow.png' | relative_url }}"
+							alt="Fail"
+							aria-hidden="true"
+						/>
+						<img
+							class="training-hub-game__side-arrow training-hub-game__side-arrow--pass"
+							src="{{ '/assets/projects/training-hub/training-game/Pass Arrow.png' | relative_url }}"
+							alt="Pass"
+							aria-hidden="true"
+						/>
 						<div class="training-hub-game__container" id="gameContainer" tabindex="0">
 							<button class="training-hub-game__pause-btn" type="button" data-training-game-pause aria-label="Pause game">
 								<img
@@ -179,6 +191,10 @@ permalink: /training-hub/
 									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--resume" type="button" data-training-game-resume aria-label="Resume game"></button>
 									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" data-training-game-exit aria-label="Save and exit"></button>
 								</div>
+							</div>
+							<div class="training-hub-game__scoreboard" aria-live="polite" aria-label="Score">
+								<span class="training-hub-game__scoreboard-label">Score</span>
+								<span class="training-hub-game__scoreboard-value" data-training-game-score>0</span>
 							</div>
 							<div id="promptDropDown" class="promptDropDown"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
