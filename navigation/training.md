@@ -192,6 +192,10 @@ permalink: /training-hub/
 									<button class="training-hub-game__pause-menu-btn training-hub-game__pause-menu-btn--exit" type="button" data-training-game-exit aria-label="Save and exit"></button>
 								</div>
 							</div>
+							<div class="training-hub-game__scoreboard" aria-live="polite" aria-label="Score">
+								<span class="training-hub-game__scoreboard-label">Score</span>
+								<span class="training-hub-game__scoreboard-value" data-training-game-score>0</span>
+							</div>
 							<div id="promptDropDown" class="promptDropDown"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
 						</div>

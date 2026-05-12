@@ -2,6 +2,7 @@ import { GameCore } from '../../../../GameEnginev1.1/essentials/Game.js';
 import GameControl from '../../../../GameEnginev1.1/essentials/GameControl.js';
 import {
   TRAINING_HUB_LEVEL_ID,
+  computeTrainingHubScore,
   createTrainingHubSession,
   fetchTrainingHubLeaderboard,
   saveTrainingHubSession,
@@ -124,6 +125,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
   const pauseMenu = root.querySelector('[data-training-game-pause-menu]');
   const resumeButton = root.querySelector('[data-training-game-resume]');
   const exitButton = root.querySelector('[data-training-game-exit]');
+  const scoreDisplay = root.querySelector('[data-training-game-score]');
 
   if (!container || !canvas || !overlay) {
     console.warn('TrainingHubBaseGame: required training game elements were not found.', {
@@ -267,6 +269,16 @@ export function initTrainingHubBaseGame(root, options = {}) {
 
     if (missionText) {
       missionText.textContent = getMissionCopy(visitedCount, NPC_IDS.length);
+    }
+
+    if (scoreDisplay) {
+      const elapsed = gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
+      const currentScore = computeTrainingHubScore({
+        checkpointsVisited: visitedCount,
+        dialoguesCompleted,
+        timePlayedSeconds: elapsed,
+      });
+      scoreDisplay.textContent = currentScore;
     }
   };
 
