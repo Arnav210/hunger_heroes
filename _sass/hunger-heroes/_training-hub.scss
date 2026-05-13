@@ -496,6 +496,16 @@
 	right: 16px;
 }
 
+.training-hub-game__side-arrow[data-arrow-result='correct'] {
+	filter: drop-shadow(0 0 8px #22c55e) brightness(1.2);
+	transition: filter 0.1s ease;
+}
+
+.training-hub-game__side-arrow[data-arrow-result='incorrect'] {
+	filter: drop-shadow(0 0 8px #ef4444) brightness(0.85);
+	transition: filter 0.1s ease;
+}
+
 .training-hub-game__stage:fullscreen,
 .training-hub-game__stage:-webkit-full-screen {
 	height: 100vh;
