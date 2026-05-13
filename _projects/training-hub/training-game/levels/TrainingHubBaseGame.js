@@ -142,6 +142,10 @@ export function initTrainingHubBaseGame(root, options = {}) {
   let dialoguesCompleted = 0;
   let arrowScore = 0;
   let resizeObserver = null;
+  // When items are introduced, update this to reflect the current item's state.
+  // true  = item is valid  (pass arrow awards points)
+  // false = item is invalid (fail arrow awards points)
+  let currentItemValid = true;
   let lastSavedSignature = null;
   const openedDialogueBoxes = new Map();
   const completedDialogueBoxes = new Set();
@@ -640,10 +644,41 @@ export function initTrainingHubBaseGame(root, options = {}) {
     }
   };
 
+  let arrowFlashTimer = null;
+
+  const flashArrowFeedback = (button, correct) => {
+    if (arrowFlashTimer) {
+      window.clearTimeout(arrowFlashTimer);
+    }
+
+    arrowButtons.forEach((b) => b.removeAttribute('data-arrow-result'));
+    button.setAttribute('data-arrow-result', correct ? 'correct' : 'incorrect');
+
+    arrowFlashTimer = window.setTimeout(() => {
+      button.removeAttribute('data-arrow-result');
+    }, 800);
+  };
+
   arrowButtons.forEach((button) => {
+    const arrowType = button.dataset.trainingGameArrow; // 'pass' or 'fail'
     button.addEventListener('click', () => {
-      arrowScore += 5;
-      updateStats();
+      if (!gameStarted) {
+        return;
+      }
+
+      const correct =
+        (arrowType === 'pass' && currentItemValid === true) ||
+        (arrowType === 'fail' && currentItemValid === false);
+
+      if (correct) {
+        arrowScore += 5;
+        updateStats();
+        setFeedback(arrowType === 'pass' ? 'Correct! Item accepted.' : 'Correct! Item rejected.');
+      } else {
+        setFeedback(arrowType === 'pass' ? 'Wrong! That item should be rejected.' : 'Wrong! That item should be accepted.');
+      }
+
+      flashArrowFeedback(button, correct);
     });
   });
 
