@@ -41,13 +41,19 @@ Accept this JSON request body for `POST /api/training-hub/sessions`:
   "completionRate": 80,
   "completed": false,
   "checkpoints": ["WelcomeZone", "ArtZone", "CopyZone", "FlowZone"],
-  "score": 758,
-  "details": "{\"checkpoints\":[\"WelcomeZone\",\"ArtZone\",\"CopyZone\",\"FlowZone\"],\"completionRate\":80,\"completed\":false,\"source\":\"training-hub-web\"}",
+  "score": 683,
+  "details": "{\"checkpoints\":[\"WelcomeZone\",\"ArtZone\",\"CopyZone\",\"FlowZone\"],\"completionRate\":80,\"completed\":false,\"source\":\"training-hub-web\",\"classifier\":{\"totalScenarios\":6,\"attempts\":5,\"correct\":5,\"bonusScore\":25}}",
   "payload": {
     "checkpoints": ["WelcomeZone", "ArtZone", "CopyZone", "FlowZone"],
     "completionRate": 80,
     "completed": false,
-    "source": "training-hub-web"
+    "source": "training-hub-web",
+    "classifier": {
+      "totalScenarios": 6,
+      "attempts": 5,
+      "correct": 5,
+      "bonusScore": 25
+    }
   },
   "createdAt": "2026-05-12T18:30:00.000Z"
 }
@@ -60,15 +66,23 @@ Do not trust client-computed values. Recompute all derived fields on the server.
 Server-side score formula:
 
 ```text
-score = (checkpointsVisited * 100)
+baseScore = (checkpointsVisited * 100)
       + (dialoguesCompleted * 25)
       + max(0, 300 - timePlayedSeconds)
+
+classifierCorrect = clamp(payload.classifier.correct, 0, 6)
+classifierBonus = classifierCorrect * 5
+
+score = baseScore + classifierBonus
 ```
 
 Also recompute:
 
 - `completionRate = round((checkpointsVisited / checkpointsTotal) * 100)`
 - `completed = checkpointsVisited >= checkpointsTotal`
+- `classifierAttempts = max(0, payload.classifier.attempts)`
+- `classifierCorrect = clamp(payload.classifier.correct, 0, 6)`
+- `classifierBonus = classifierCorrect * 5`
 
 Clamp invalid values:
 
@@ -76,6 +90,9 @@ Clamp invalid values:
 - `checkpointsTotal` minimum `1`
 - `dialoguesCompleted` minimum `0`
 - `timePlayedSeconds` minimum `0`
+- missing `payload.classifier` should behave like `attempts = 0`, `correct = 0`, `bonus = 0`
+
+Keep the raw `payload` and `details` data. The frontend uses `payload.classifier` to describe the pass/fail arrow portion of the run.
 
 ### Entity Design
 
@@ -104,10 +121,16 @@ public class TrainingHubSession {
     private Integer timePlayedSeconds;
     private Integer completionRate;
     private Boolean completed;
+    private Integer classifierAttempts;
+    private Integer classifierCorrect;
+    private Integer classifierBonusScore;
     private Integer score;
 
     @Lob
     private String details;
+
+    @Lob
+    private String payload;
 
     private LocalDateTime createdAt;
 }
@@ -134,6 +157,7 @@ Requirements:
 1. `POST /sessions`
    - validate required fields
    - recompute score and derived values server-side
+  - preserve `payload.classifier` and keep `details` in sync with it
    - set `createdAt` if missing
    - return the saved record as JSON with camelCase keys
 2. `GET /sessions/leaderboard`
@@ -161,8 +185,12 @@ Return camelCase JSON. A saved session should look like:
   "timePlayedSeconds": 142,
   "completionRate": 80,
   "completed": false,
-  "score": 758,
-  "details": "{\"checkpoints\":[\"WelcomeZone\",\"ArtZone\",\"CopyZone\",\"FlowZone\"],\"completionRate\":80,\"completed\":false,\"source\":\"training-hub-web\"}",
+  "classifierAttempts": 5,
+  "classifierCorrect": 5,
+  "classifierBonusScore": 25,
+  "score": 683,
+  "details": "{\"checkpoints\":[\"WelcomeZone\",\"ArtZone\",\"CopyZone\",\"FlowZone\"],\"completionRate\":80,\"completed\":false,\"source\":\"training-hub-web\",\"classifier\":{\"totalScenarios\":6,\"attempts\":5,\"correct\":5,\"bonusScore\":25}}",
+  "payload": "{\"checkpoints\":[\"WelcomeZone\",\"ArtZone\",\"CopyZone\",\"FlowZone\"],\"completionRate\":80,\"completed\":false,\"source\":\"training-hub-web\",\"classifier\":{\"totalScenarios\":6,\"attempts\":5,\"correct\":5,\"bonusScore\":25}}",
   "createdAt": "2026-05-12T18:30:00"
 }
 ```
@@ -183,6 +211,7 @@ Add a small seed helper with 3 sample sessions for `training-hub-team-starter-ma
 
 - `POST /api/training-hub/sessions` persists a session
 - server overwrites any incorrect client `score`
+- server overwrites any incorrect client classifier bonus using `payload.classifier.correct`
 - `GET /api/training-hub/sessions/leaderboard?levelId=training-hub-team-starter-map&limit=5` returns at most 5 rows
 - leaderboard ordering prefers higher score, then faster time
 - `GET /api/training-hub/sessions/user/{personId}` only returns that user's sessions

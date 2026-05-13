@@ -200,7 +200,7 @@ permalink: /training-hub/
 								<span class="training-hub-game__scoreboard-label">Score</span>
 								<span class="training-hub-game__scoreboard-value" data-training-game-score>0</span>
 							</div>
-							<div id="promptDropDown" class="promptDropDown"></div>
+							<div class="training-hub-game__classifier" data-training-game-classifier aria-live="polite"></div>
 							<canvas id="gameCanvas" aria-hidden="true"></canvas>
 						</div>
 						<div class="training-hub-game__overlay" data-training-game-overlay>

@@ -1,7 +1,9 @@
 import { GameCore } from '../../../../GameEnginev1.1/essentials/Game.js';
 import GameControl from '../../../../GameEnginev1.1/essentials/GameControl.js';
 import {
+  TRAINING_HUB_CLASSIFIER_BONUS_PER_CORRECT,
   TRAINING_HUB_LEVEL_ID,
+  computeTrainingHubScore,
   createTrainingHubSession,
   fetchTrainingHubLeaderboard,
   saveTrainingHubSession,
@@ -15,6 +17,57 @@ const FULLSCREEN_COPY = {
   enter: 'Go full screen',
   exit: 'Exit full screen',
 };
+const CLASSIFIER_ROUND_POINTS = TRAINING_HUB_CLASSIFIER_BONUS_PER_CORRECT;
+const CLASSIFIER_SCENARIOS = [
+  {
+    id: 'sealed-cans',
+    title: 'Sealed canned vegetables',
+    description: 'Factory-sealed cans with intact labels and no dents or rust.',
+    decisionLabel: 'Accept for donation',
+    valid: true,
+    reason: 'Shelf-stable, unopened donations with readable labels are safe to accept.',
+  },
+  {
+    id: 'opened-granola',
+    title: 'Opened granola bars',
+    description: 'The box is already open and individual bars are missing.',
+    decisionLabel: 'Reject from donation',
+    valid: false,
+    reason: 'Opened food is not safe to redistribute because tampering cannot be verified.',
+  },
+  {
+    id: 'fresh-apples',
+    title: 'Fresh apples in produce crate',
+    description: 'Clean fruit with no bruising, mold, or leakage in the crate.',
+    decisionLabel: 'Accept for donation',
+    valid: true,
+    reason: 'Fresh produce can be accepted when it is clean, intact, and handled safely.',
+  },
+  {
+    id: 'expired-yogurt',
+    title: 'Expired yogurt cups',
+    description: 'Refrigerated yogurt passed its use-by date three days ago.',
+    decisionLabel: 'Reject from donation',
+    valid: false,
+    reason: 'Expired refrigerated items should fail intake because food safety is compromised.',
+  },
+  {
+    id: 'frozen-meals',
+    title: 'Frozen meals kept at temperature',
+    description: 'Meals arrived solidly frozen in insulated carriers with labels attached.',
+    decisionLabel: 'Accept for donation',
+    valid: true,
+    reason: 'Properly stored frozen food can pass intake when it stays frozen and labeled.',
+  },
+  {
+    id: 'bulging-jar',
+    title: 'Bulging pasta sauce jar',
+    description: 'Glass jar lid is raised and the seal appears compromised.',
+    decisionLabel: 'Reject from donation',
+    valid: false,
+    reason: 'Bulging containers can indicate spoilage or contamination and must be rejected.',
+  },
+];
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -116,6 +169,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
   const feedbackText = root.querySelector('[data-training-game-feedback]');
   const leaderboardList = root.querySelector('[data-training-game-leaderboard]');
   const leaderboardSource = root.querySelector('[data-training-game-source]');
+  const classifierPanel = root.querySelector('[data-training-game-classifier]');
   const saveButton = root.querySelector('[data-training-game-save]');
   const refreshButton = root.querySelector('[data-training-game-refresh]');
   const pauseButton = root.querySelector('[data-training-game-pause]');
@@ -141,15 +195,86 @@ export function initTrainingHubBaseGame(root, options = {}) {
   let timerId = null;
   let dialoguesCompleted = 0;
   let arrowScore = 0;
+  let classifierIndex = 0;
+  let classifierAttempts = 0;
+  let classifierCorrect = 0;
   let resizeObserver = null;
-  // When items are introduced, update this to reflect the current item's state.
   // true  = item is valid  (pass arrow awards points)
   // false = item is invalid (fail arrow awards points)
   let currentItemValid = true;
   let lastSavedSignature = null;
+  const classifierResults = new Map();
   const openedDialogueBoxes = new Map();
   const completedDialogueBoxes = new Set();
   const visitedNpcs = new Set();
+
+  const getElapsedSeconds = () => (gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0);
+
+  const getCurrentScenario = () => CLASSIFIER_SCENARIOS[classifierIndex] || null;
+
+  const getTotalScore = () => {
+    if (!gameStarted) {
+      return 0;
+    }
+
+    return computeTrainingHubScore({
+      checkpointsVisited: visitedNpcs.size,
+      dialoguesCompleted,
+      timePlayedSeconds: getElapsedSeconds(),
+    }) + arrowScore;
+  };
+
+  const syncCurrentScenario = () => {
+    currentItemValid = getCurrentScenario()?.valid ?? true;
+  };
+
+  const renderClassifier = () => {
+    if (!classifierPanel) {
+      return;
+    }
+
+    const currentScenario = getCurrentScenario();
+
+    if (!currentScenario) {
+      classifierPanel.innerHTML = [
+        '<div class="training-hub-game__classifier-card training-hub-game__classifier-card--complete">',
+        '<p class="training-hub-game__classifier-eyebrow">Classifier complete</p>',
+        '<h4>All intake checks finished</h4>',
+        `<p>You cleared ${classifierCorrect}/${CLASSIFIER_SCENARIOS.length} donation decisions. Save your run to publish the score to the leaderboard.</p>`,
+        `<p class="training-hub-game__classifier-meta">Attempts: ${classifierAttempts} · Bonus score earned: ${arrowScore}</p>`,
+        '</div>',
+      ].join('');
+      return;
+    }
+
+    const currentResult = classifierResults.get(currentScenario.id);
+    const progressLabel = `Decision ${Math.min(classifierIndex + 1, CLASSIFIER_SCENARIOS.length)} of ${CLASSIFIER_SCENARIOS.length}`;
+    const statusCopy = currentResult
+      ? `<span class="training-hub-game__classifier-status" data-classifier-status="${currentResult.correct ? 'correct' : 'incorrect'}">${currentResult.correct ? 'Last answer correct' : 'Retry this item'}</span>`
+      : '';
+    const decisionCopy = currentResult
+      ? `<div><dt>Expected action</dt><dd>${currentScenario.decisionLabel}</dd></div>`
+      : '<div><dt>Focus</dt><dd>Check packaging, freshness, storage temperature, and visible damage before choosing pass or fail.</dd></div>';
+    const reasonCopy = currentResult
+      ? `<p class="training-hub-game__classifier-reason">${currentScenario.reason}</p>`
+      : '<p class="training-hub-game__classifier-reason">Choose Pass only for donations that are safe, sealed when needed, properly labeled, and within date.</p>';
+
+    classifierPanel.innerHTML = [
+      '<div class="training-hub-game__classifier-card">',
+      `<div class="training-hub-game__classifier-header"><p class="training-hub-game__classifier-eyebrow">Donation intake</p><span class="training-hub-game__classifier-progress">${progressLabel}</span></div>`,
+      `<h4>${currentScenario.title}</h4>`,
+      `<p>${currentScenario.description}</p>`,
+      '<dl class="training-hub-game__classifier-details">',
+      decisionCopy,
+      `<div><dt>Scoring</dt><dd>+${CLASSIFIER_ROUND_POINTS} points for a correct pass or fail decision</dd></div>`,
+      '</dl>',
+      '<div class="training-hub-game__classifier-footer">',
+      reasonCopy,
+      statusCopy,
+      '</div>',
+      '</div>',
+    ].join('');
+  };
 
   const setFeedback = (message) => {
     if (feedbackText) {
@@ -258,7 +383,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
     }
 
     if (timeStat) {
-      const elapsed = gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
+      const elapsed = getElapsedSeconds();
       timeStat.textContent = formatTime(elapsed);
     }
 
@@ -275,7 +400,7 @@ export function initTrainingHubBaseGame(root, options = {}) {
     }
 
     if (scoreDisplay) {
-      scoreDisplay.textContent = arrowScore;
+      scoreDisplay.textContent = getTotalScore();
     }
   };
 
@@ -354,10 +479,23 @@ export function initTrainingHubBaseGame(root, options = {}) {
       checkpointsVisited: visitedNpcs.size,
       checkpointsTotal: NPC_IDS.length,
       dialoguesCompleted,
-      timePlayedSeconds: gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0,
+      timePlayedSeconds: getElapsedSeconds(),
       visitedCheckpoints: Array.from(visitedNpcs),
     });
-    return { ...session, score: arrowScore };
+
+    return {
+      ...session,
+      score: getTotalScore(),
+      payload: {
+        ...session.payload,
+        classifier: {
+          totalScenarios: CLASSIFIER_SCENARIOS.length,
+          attempts: classifierAttempts,
+          correct: classifierCorrect,
+          bonusScore: arrowScore,
+        },
+      },
+    };
   };
 
   const saveRun = async ({ quiet = false } = {}) => {
@@ -579,6 +717,13 @@ export function initTrainingHubBaseGame(root, options = {}) {
     completedDialogueBoxes.clear();
     visitedNpcs.clear();
     lastSavedSignature = null;
+    arrowScore = 0;
+    classifierIndex = 0;
+    classifierAttempts = 0;
+    classifierCorrect = 0;
+    classifierResults.clear();
+    syncCurrentScenario();
+    renderClassifier();
 
     if (statusBadge) {
       statusBadge.textContent = 'Starter map live';
@@ -666,15 +811,30 @@ export function initTrainingHubBaseGame(root, options = {}) {
         return;
       }
 
+      const currentScenario = getCurrentScenario();
+
+      if (!currentScenario) {
+        setFeedback('All pass/fail items are already complete. Save your run to update the leaderboard.');
+        return;
+      }
+
       const correct =
         (arrowType === 'pass' && currentItemValid === true) ||
         (arrowType === 'fail' && currentItemValid === false);
 
+      classifierAttempts += 1;
+      classifierResults.set(currentScenario.id, { correct, arrowType });
+
       if (correct) {
-        arrowScore += 5;
+        arrowScore += CLASSIFIER_ROUND_POINTS;
+        classifierCorrect += 1;
+        classifierIndex += 1;
+        syncCurrentScenario();
         updateStats();
-        setFeedback(arrowType === 'pass' ? 'Correct! Item accepted.' : 'Correct! Item rejected.');
+        renderClassifier();
+        setFeedback(arrowType === 'pass' ? 'Correct! Item accepted and score added.' : 'Correct! Item rejected and score added.');
       } else {
+        renderClassifier();
         setFeedback(arrowType === 'pass' ? 'Wrong! That item should be rejected.' : 'Wrong! That item should be accepted.');
       }
 
@@ -756,6 +916,8 @@ export function initTrainingHubBaseGame(root, options = {}) {
   }
 
   updateStats();
+  syncCurrentScenario();
+  renderClassifier();
   updateFullscreenButtons();
   void loadLeaderboard();
 
@@ -767,6 +929,8 @@ export function initTrainingHubBaseGame(root, options = {}) {
     toggleFullscreen,
     getState: () => ({
       gameStarted,
+      classifierAttempts,
+      classifierCorrect,
       dialoguesCompleted,
       visitedCheckpoints: Array.from(visitedNpcs),
       resizeObserverActive: Boolean(resizeObserver),

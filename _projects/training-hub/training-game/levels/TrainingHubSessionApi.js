@@ -1,6 +1,7 @@
 import { fetchOptions, javaURI } from '../../../../api/config.js';
 
 export const TRAINING_HUB_LEVEL_ID = 'training-hub-team-starter-map';
+export const TRAINING_HUB_CLASSIFIER_BONUS_PER_CORRECT = 5;
 
 const LOCAL_STORAGE_KEY = 'trainingHubGameSessions';
 const TRAINING_HUB_ENDPOINT = '/api/training-hub/sessions';
@@ -50,11 +51,25 @@ export function computeTrainingHubScore({ checkpointsVisited = 0, dialoguesCompl
     + Math.max(0, 300 - Math.max(0, toInteger(timePlayedSeconds)));
 }
 
+const computeClassifierBonus = (payload = {}) => {
+  const classifier = parsePayload(payload).classifier;
+
+  if (!classifier || typeof classifier !== 'object') {
+    return 0;
+  }
+
+  const correct = Math.max(0, toInteger(classifier.correct));
+  const totalScenarios = Math.max(toInteger(classifier.totalScenarios, correct), correct);
+
+  return Math.min(correct, totalScenarios) * TRAINING_HUB_CLASSIFIER_BONUS_PER_CORRECT;
+};
+
 const normalizeSession = (entry = {}) => {
+  const payload = parsePayload(entry.payload ?? entry.details);
   const checkpoints = Array.isArray(entry.checkpoints)
     ? entry.checkpoints.filter(Boolean)
-    : Array.isArray(parsePayload(entry.payload ?? entry.details).checkpoints)
-      ? parsePayload(entry.payload ?? entry.details).checkpoints.filter(Boolean)
+    : Array.isArray(payload.checkpoints)
+      ? payload.checkpoints.filter(Boolean)
       : [];
 
   const checkpointsVisited = Math.max(
@@ -78,7 +93,7 @@ const normalizeSession = (entry = {}) => {
       ),
     ),
   );
-  const payload = parsePayload(entry.payload ?? entry.details);
+  const classifierBonus = computeClassifierBonus(payload);
 
   return {
     id: entry.id ?? entry.sessionId ?? entry.session_id ?? null,
@@ -94,7 +109,7 @@ const normalizeSession = (entry = {}) => {
     score: Math.max(
       toInteger(
         entry.score ?? entry.sessionScore ?? entry.session_score,
-        computeTrainingHubScore({ checkpointsVisited, dialoguesCompleted, timePlayedSeconds }),
+        computeTrainingHubScore({ checkpointsVisited, dialoguesCompleted, timePlayedSeconds }) + classifierBonus,
       ),
       0,
     ),
@@ -212,11 +227,13 @@ const requestJson = async (url, options = {}, timeoutMs = 7000) => {
 };
 
 const buildSpringPayload = (session) => {
+  const payload = parsePayload(session.payload);
   const details = {
+    ...payload,
     checkpoints: session.checkpoints,
     completionRate: session.completion_rate,
     completed: session.completed,
-    source: 'training-hub-web',
+    source: payload.source || 'training-hub-web',
   };
 
   return {
