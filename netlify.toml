@@ -1,0 +1,18 @@
+# Netlify build configuration.
+#
+# GitHub Pages serves this site under a sub-path (/tcg_collect, set as `baseurl`
+# in _config.yml). Netlify serves it at the domain ROOT
+# (https://tcgcollect.netlify.app/), so every /tcg_collect/... link would 404
+# here. We override baseurl to "" at build time — WITHOUT editing _config.yml —
+# so both deploys keep working:
+#   * GitHub Pages -> baseurl "/tcg_collect" (from _config.yml)
+#   * Netlify      -> baseurl "" (from the --baseurl flag below)
+[build]
+  command = "bundle exec jekyll build --baseurl \"\""
+  publish = "_site"
+
+[build.environment]
+  JEKYLL_ENV = "production"
+
+# No SPA fallback needed: Jekyll emits a real HTML file per route. Netlify serves
+# 404.html automatically for unmatched paths.
